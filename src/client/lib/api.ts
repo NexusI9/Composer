@@ -3,7 +3,7 @@ import { useEffect } from "react";
 export type IRequest = {
     action: string;
     payload?: any;
-    transactionId?: number;
+    readonly transactionId?: number;
 };
 
 export function send(request: IRequest) {

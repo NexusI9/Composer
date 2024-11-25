@@ -11,25 +11,23 @@ import "/Users/elkhantour/Documents/Websites/Modules/sass-core/modules/size.scss
 import "/Users/elkhantour/Documents/Websites/Modules/sass-core/modules/border.scss";
 import "/Users/elkhantour/Documents/Websites/Modules/sass-core/modules/padding-margin.scss";
 
-import { Theme, Button } from '@radix-ui/themes';
+import { Theme } from '@radix-ui/themes';
 import Settings from "@layouts/Settings/Settings";
 import Preview from "@layouts/Preview/Preview";
-import { send } from "./lib/api";
-import { useState } from "react";
+import { Resizer } from "@components/Resizer";
 
 export default () => {
 
-    const [pageAmount, setPageAmout] = useState(0);
-
+    
     return (<Theme
         appearance="dark"
         accentColor="blue"
         style={{ background: "#1E1E1E" }}
     >
-        <div className="flex f-row gap-l padding-l full-height">
+        <div className="container flex f-row gap-l full-height">
             <Settings />
             <Preview />
         </div>
-
+        <Resizer/>
     </Theme>);
 }

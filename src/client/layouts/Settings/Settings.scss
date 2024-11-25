@@ -1,0 +1,25 @@
+.settings{
+
+    transition: flex, width, padding, 0.85s ease-out;
+    flex: 1;
+    width: 100%;
+    flex-grow: 0;
+
+    &-wrapper{
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    &[data-active=false]{
+        pointer-events: none;
+        flex: 0;
+        width: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .combobox-trigger{
+        width: 100px;
+    }
+
+}

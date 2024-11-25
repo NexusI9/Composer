@@ -1,0 +1,17 @@
+.resizer{
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    z-index: 4;
+    cursor: nwse-resize;
+    min-height: unset;
+    pointer-events: auto;
+
+    svg {
+        fill: #80808080;
+        align-self: flex-end;
+    }
+}

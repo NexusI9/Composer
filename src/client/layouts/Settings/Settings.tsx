@@ -1,50 +1,80 @@
-import { get, listen, send } from "@client/lib/api";
-import { ISettings, LayerType } from "@ctypes/settings";
-import { Text } from "@radix-ui/themes";
-import { createElement, useEffect, useState } from "react";
-import { MixerVerticalIcon } from "@radix-ui/react-icons";
-import InputDropdown from "@components/InputDropdown/InputDropdown";
-import CheckboxDropdown from "@components/CheckboxDropdown/CheckboxDropdown";
+import "./Settings.scss";
+import { IRequest, listen } from "@client/lib/api";
+import Combobox from "@components/Combobox/Combobox";
+import ComponentContext from "@components/ComponentContext/ComponentContext";
+import { Button, Text } from "@radix-ui/themes";
+import { createElement, FunctionComponent, useState } from "react";
 
-interface IFilter {
-    element: (arg: any) => JSX.Element;
-    settingKey: keyof ISettings;
-    label: string;
+interface IParamItem {
+    element: FunctionComponent<Object>;
+    props: Object;
 }
+
+interface IParam {
+    heading: string;
+    options: Array<IParamItem>;
+}
+
 
 export default () => {
 
-    const [settings, setSettings] = useState<ISettings>();
+    const [active, setActive] = useState(false);
 
-    const filterMap: Array<IFilter> = [
-        { element: CheckboxDropdown, settingKey: "type", label: "Type" },
-        { element: CheckboxDropdown, settingKey: "state", label: "State" },
-        { element: InputDropdown, settingKey: "name", label: "Name" }
-    ]
+    const handleOnComboboxChange = ({ index, value }: { index: number, value: string }) => {
+        console.log({ index, value });
+    };
 
-    useEffect(() => {
-        get({ action: "GET_SETTINGS" }).then(({ payload }) => setSettings(payload));
-    }, []);
-
-    listen(({ action, payload }) => {
-        switch (action) {
-            case "UPDATE_SETTINGS":
-                setSettings(payload);
-                send({ action: "RELOAD_TREE" });
-                break;
+    const comboboxOptions = (label: string, paramIndex: number) => ({
+        element: Combobox as FunctionComponent,
+        props: {
+            label,
+            content: {
+                type: "ASYNC",
+                placeholder: "Loading...",
+                action: "GET_ACTIVE_COMPONENT_VARIANTS_KEY",
+                transformer: (e: IRequest) => { e.payload.unshift("None"); return e.payload; } //Add empty initial value
+            },
+            onChange: (e: string) => handleOnComboboxChange({ index: paramIndex, value: String(e) })
         }
     });
 
-    return (<div className="flex f-col gap-2xl f-center-h">
-        {settings &&
-            <div className="flex f-row gap-2xl">
-                {filterMap.map(({ element, settingKey, label }, i) => createElement(element, {
-                    key: `filter${i}`,
-                    content: settings[settingKey],
-                    label,
-                    settingKey
-                }))}
-            </div>
+    const paramMap: Array<IParam> = [
+        {
+            heading: "Column",
+            options: [
+                comboboxOptions('Property 1', 1),
+                comboboxOptions('Property 2', 2),
+            ]
+        },
+        {
+            heading: "Row",
+            options: [
+                comboboxOptions('Property 1', 3),
+                comboboxOptions('Property 2', 4),
+            ]
         }
-    </div>);
+    ];
+
+
+    return (
+        <ComponentContext onChange={(e: any) => setActive(!!e)}>
+            <div className="settings color-bg-base-900 padding-xl flex f-end" data-active={active}>
+                <div className="settings-wrapper full-height flex f-col gap-2xl f-center-h f-between">
+                    <div className="flex f-col gap-2xl">
+                        {paramMap.map(({ heading, options }, i) => <div className="flex f-col gap-m" key={`param${i}`}>
+                            <Text size="1" weight="bold">{heading}</Text>
+                            <div className="flex f-row gap-m">
+                                {
+                                    options.map(({ element, props }, j) => createElement(element, { ...props, key: `settingsoptions${i + j}` }))
+                                }
+                            </div>
+                        </div>
+                        )}
+
+                    </div>
+
+                    <Button className="full-width">Organize</Button>
+                </div>
+            </div>
+        </ComponentContext>);
 }

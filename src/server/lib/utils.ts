@@ -16,3 +16,8 @@ export function getNodeAmount(type: LayerType | "HIDDEN") {
             return figma.currentPage.findChildren(child => child.type === type).length;
     }
 }
+
+export function validateActiveComponent(selection: undefined | SceneNode): undefined | ComponentSetNode {
+    if (!selection) { return selection; }
+    return selection.type == "COMPONENT_SET" ? selection : undefined;
+}
