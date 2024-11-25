@@ -35,13 +35,7 @@ export default () => {
         }
     });
 
-    return (<div className="flex f-row gap-2xl f-center-h">
-
-        <div className="flex f-row gap-s f-center color-text-base-400">
-            <MixerVerticalIcon />
-            <Text size="2">Filter by</Text>
-        </div>
-
+    return (<div className="flex f-col gap-2xl f-center-h">
         {settings &&
             <div className="flex f-row gap-2xl">
                 {filterMap.map(({ element, settingKey, label }, i) => createElement(element, {
@@ -52,8 +46,5 @@ export default () => {
                 }))}
             </div>
         }
-
-
-
     </div>);
 }

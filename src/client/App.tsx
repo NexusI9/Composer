@@ -16,9 +16,6 @@ import Settings from "@layouts/Settings/Settings";
 import Preview from "@layouts/Preview/Preview";
 import { send } from "./lib/api";
 import { useState } from "react";
-import { getActivePageAmount } from "./lib/utilities";
-import TreeReloader from "@components/TreeReloader/TreeReloader";
-
 
 export default () => {
 
@@ -29,12 +26,9 @@ export default () => {
         accentColor="blue"
         style={{ background: "#1E1E1E" }}
     >
-        <div className="flex f-col gap-l padding-l full-height">
+        <div className="flex f-row gap-l padding-l full-height">
             <Settings />
             <Preview />
-            <TreeReloader onReload={(tree) => setPageAmout(getActivePageAmount(tree))}>
-                <Button {...(!!!pageAmount && { disabled: true })} onClick={() => send({ action: "EXPORT_TREE" })}>Export Sitemap</Button>
-            </TreeReloader>
         </div>
 
     </Theme>);

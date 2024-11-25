@@ -1,5 +1,5 @@
 {
-  "name": "my-figma-plugin",
+  "name": "composer",
   "version": "1.0.0",
   "description": "Your Figma Plugin",
   "main": "index.js",

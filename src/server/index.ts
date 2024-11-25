@@ -1,9 +1,8 @@
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
 import { ISettings, UpdateSettingsPayload } from "@ctypes/settings";
-import { createTree, replaceSettingKey, filterTree, getNodeAmount, sortTree } from "./lib/utils";
-import { ITreeItem } from "@components/TreeItem/TreeItem";
-import { exportTree } from "./lib/export";
+import { replaceSettingKey, getNodeAmount } from "./lib/utils";
+
 
 let settings: ISettings = {
   state: [
@@ -28,7 +27,7 @@ let settings: ISettings = {
   }
 };
 
-let tree: Array<ITreeItem> = [];
+
 
 figma.showUI(__html__, { themeColors: true });
 figma.ui.resize(600, 400);
@@ -71,23 +70,6 @@ figma.ui.onmessage = async (msg) => {
       figma.ui.postMessage({ ...msg, payload: settings });
       break;
 
-    case 'GET_TREE':
-      tree = createTree();
-      sortTree(tree);
-      await filterTree(tree, settings);
-
-      figma.ui.postMessage({ ...msg, payload: tree });
-      break;
-
-    case 'RELOAD_TREE':
-      figma.ui.postMessage({ action: "RELOAD_TREE", payload: tree });
-      break;
-
-    case "EXPORT_TREE":
-      await exportTree(tree);
-      figma.closePlugin();
-      break;
-
   }
 
 };
@@ -105,7 +87,7 @@ figma.loadAllPagesAsync().then(_ => {
         type == "DELETE" ||
         type == "CREATE"
       ) {
-        figma.ui.postMessage({ action: "RELOAD_TREE", payload: tree });
+
       }
 
     });
