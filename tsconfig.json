@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "lib": ["DOM", "es2021"],
+    "strict": true,
+    "outDir": "dist",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": [
+      "./node_modules/@types",
+      "./node_modules/@figma"
+    ],
+    "baseUrl": "./",
+    "paths": {
+        "@components/*": ["src/client/components/*"],
+        "@layouts/*":["src/client/layouts/*"],
+        "@icons/*": ["src/client/assets/icons/*"],
+        "@styles/*": ["src/client/styles/*"],
+        "@ctypes/*": ["src/types/*"],
+        "@lib/*": ["src/lib/*"],
+        "@templates/*":["src/client/templates/*"],
+        "@client/*": ["src/client/*"],
+        "@server/*":["src/server/*"]
+    }
+  },
+  "include": ["src","src/custom.d.ts"]
+}

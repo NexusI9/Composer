@@ -1,0 +1,10 @@
+*.no-highlight{
+    &[data-highlighted]{
+        background-color: transparent;
+    }
+}
+
+
+.no-user-select{
+    user-select: none;
+}
