@@ -17,7 +17,18 @@ export function getNodeAmount(type: LayerType | "HIDDEN") {
     }
 }
 
-export function validateActiveComponent(selection: undefined | SceneNode): undefined | ComponentSetNode {
-    if (!selection) { return selection; }
-    return selection.type == "COMPONENT_SET" ? selection : undefined;
+export function validateActiveComponent(node: undefined | SceneNode): undefined | Partial<ComponentSetNode> {
+    if (!node) { return node; }
+    return node.type == "COMPONENT_SET" ? clone(node) : undefined;
+}
+
+export function clone(source: Object): Partial<Object> {
+
+    const target = {};
+    for (const key in source) {
+        try {
+            target[key as keyof typeof target] = source[key as keyof typeof target];
+        } catch { }
+    }
+    return target;
 }

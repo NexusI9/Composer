@@ -1,7 +1,6 @@
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
-import { ISettings, UpdateSettingsPayload } from "@ctypes/settings";
-import { replaceSettingKey, getNodeAmount, validateActiveComponent } from "./lib/utils";
+import {validateActiveComponent } from "./lib/utils";
 
 /**
  * {
@@ -17,11 +16,23 @@ import { replaceSettingKey, getNodeAmount, validateActiveComponent } from "./lib
  * }
  */
 
-let activeComponent: undefined | ComponentSetNode;
+let activeComponent: undefined | Partial<ComponentSetNode>;
 let variants = [];
 
 const DEFAULT_WINDOW_WIDTH = 600;
 const DEFAULT_WINDOW_HEIGHT = 400;
+
+function activeComponentFromSelection(selection: readonly SceneNode[]) {
+
+  activeComponent = validateActiveComponent(selection[0]);
+
+  //Preload preview in cache
+  if (activeComponent) {
+    //console.log(activeComponent.id, activeComponent.children);
+  }
+
+  figma.ui.postMessage({ action: "UPDATE_ACTIVE_COMPONENT", payload: activeComponent });
+}
 
 figma.showUI(__html__, { themeColors: true });
 figma.ui.resize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
@@ -38,28 +49,21 @@ figma.ui.onmessage = async (msg) => {
       break;
 
     case 'GET_ACTIVE_COMPONENT_VARIANTS_KEY':
-      if (activeComponent) figma.ui.postMessage({ ...msg, payload: Object.keys(activeComponent.variantGroupProperties) });
+      if (activeComponent) figma.ui.postMessage({ ...msg, payload: Object.keys(activeComponent.variantGroupProperties || {}) });
+      break;
+
+    case 'GET_SELECTION':
+      activeComponentFromSelection(figma.currentPage.selection);
       break;
 
   }
 
 };
 
-function activeComponentFromSelection(selection: readonly SceneNode[]) {
 
-  activeComponent = validateActiveComponent(selection[0]);
-
-  //Preload preview in cache
-  if(activeComponent){
-    //console.log(activeComponent.id, activeComponent.children);
-  }
-
-  figma.ui.postMessage({ action: "UPDATE_ACTIVE_COMPONENT", payload: activeComponent });
-}
 
 figma.loadAllPagesAsync().then(_ => {
 
-  activeComponentFromSelection(figma.currentPage.selection);
 
   figma.on("selectionchange", () => activeComponentFromSelection(figma.currentPage.selection));
 

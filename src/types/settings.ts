@@ -39,3 +39,5 @@ export type UpdateSettingsPayload =
     { state: ILayerBooleanSettings }
     | { type: ILayerBooleanSettings }
     | { name: ILayerNameSettings };
+
+    
