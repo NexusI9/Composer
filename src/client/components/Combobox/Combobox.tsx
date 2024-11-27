@@ -1,14 +1,20 @@
 import { get, IRequest } from '@client/lib/api';
 import { Button, ChevronDownIcon, DropdownMenu, Text } from '@radix-ui/themes';
-import { useEffect, useState } from 'react';
+import { createElement, FunctionComponent, useEffect, useState } from 'react';
 
-export interface IComboboxAsyncContent extends IRequest {
+export interface IComboboxContent {
+    element: FunctionComponent<Object>,
+    props: any | ((e: string) => Object);
+    key: string;
+}
+
+export interface IComboboxAsyncContent extends IRequest, IComboboxContent {
     type: 'ASYNC';
     placeholder: string;
     transformer?: (e: any) => string[];
 }
 
-export interface IComboboxDefaultContent {
+export interface IComboboxDefaultContent extends IComboboxContent {
     type: 'DEFAULT';
     items: string[];
 }
@@ -38,7 +44,7 @@ export default ({ label, content, onChange }: ICombobox) => {
 
         }
 
-    }, [content]);
+    }, [content.key]);
 
 
     return (<DropdownMenu.Root>
@@ -50,13 +56,17 @@ export default ({ label, content, onChange }: ICombobox) => {
         </div>
 
         <DropdownMenu.Content variant='soft'>
-            {innerContent.map((item, i) => <Text 
-            className='no-user-select cursor-pointer'
-            size="1" onClick={() => { 
-                onChange(item);
-                setActiveIndex(i);
-            }} 
-            key={item + i + performance.now()}>{item}</Text>)}
+            {innerContent.map((value, i) =>
+                createElement(content.element, {
+                    ...content.props(value),
+                    onClick: () => {
+                        content.props.onClick && content.props.onClick();
+                        onChange(value);
+                        setActiveIndex(i);
+                    },
+                    key: value + i + performance.now(),
+                    children: <>{value}</>
+                }))}
         </DropdownMenu.Content>
     </DropdownMenu.Root>)
 }

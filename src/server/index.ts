@@ -51,7 +51,7 @@ function activeComponentFromSelection(selection: readonly SceneNode[]) {
 
   //Preload preview in cache
   if(activeComponent){
-    console.log(activeComponent.id, activeComponent.children);
+    //console.log(activeComponent.id, activeComponent.children);
   }
 
   figma.ui.postMessage({ action: "UPDATE_ACTIVE_COMPONENT", payload: activeComponent });
