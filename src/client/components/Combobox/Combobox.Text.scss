@@ -5,4 +5,8 @@
         opacity: 0.3;
     }
 
+    &:hover{
+        background-color: var(--figma-color-bg-hover);
+    }
+
 }

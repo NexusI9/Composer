@@ -1,6 +1,7 @@
 import { get, IRequest } from '@client/lib/api';
 import { Button, ChevronDownIcon, DropdownMenu, Text } from '@radix-ui/themes';
 import { createElement, FunctionComponent, useEffect, useState } from 'react';
+import "./Combobox.scss";
 
 export interface IComboboxContent {
     element: FunctionComponent<Object>,
