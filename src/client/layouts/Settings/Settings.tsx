@@ -1,5 +1,5 @@
 import "./Settings.scss";
-import { IRequest, listen } from "@client/lib/api";
+import { IRequest, listen, send } from "@client/lib/api";
 import Combobox from "@components/Combobox/Combobox";
 import ComboboxText from "@components/Combobox/Combobox.Text";
 import ComponentContext from "@components/ComponentContext/ComponentContext";
@@ -23,17 +23,14 @@ export default () => {
     const [activeVariants, setActiveVariants] = useState<string[]>([]);
     const [parameters, setParameters] = useState<IParam[]>([]);
 
-    const handleOnComboboxChange = ({ index, value }: { index: number, value: string }) => {
-        
+    const handleOnComboboxChange = ({ index, value, itemIndex }: { index: number; value: string; itemIndex: number; }) => {
+
+        let APIValue = itemIndex == 0 ? undefined : value;
         const temp = activeVariants;
         temp[index] = value;
-        /*const variantIndex = temp.indexOf(value);
-        
-        if (variantIndex < 0) temp.push(value);
-        else temp.splice(variantIndex, 1);*/
-
         setActiveVariants([...temp]);
 
+        send({ action: "UPDATE_VARIANTS_CONFIGURATION", payload: { index, value: APIValue } });
     };
 
     useEffect(() => {
@@ -57,7 +54,7 @@ export default () => {
                         disabled: e != "None" && activeVariants.includes(e)
                     })
                 },
-                onChange: (e: string) => handleOnComboboxChange({ index: paramIndex, value: String(e) })
+                onChange: (value: string, index: number) => handleOnComboboxChange({ index: paramIndex, value, itemIndex: index })
             }
         });
 
@@ -92,7 +89,7 @@ export default () => {
                             <Text size="1" weight="bold">{heading}</Text>
                             <div className="flex f-row gap-m">
                                 {
-                                    options.map(({ element, props }, j) => createElement(element, { ...props, key: `settingsoptions${i + j}` }))
+                                    options.map(({ element, props }, j) => createElement(element, { ...props, key: `settingsoptions${i}${j}` }))
                                 }
                             </div>
                         </div>

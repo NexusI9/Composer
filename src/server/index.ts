@@ -1,23 +1,10 @@
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
-import {validateActiveComponent } from "./lib/utils";
-
-/**
- * {
- *   fdfjkdjkgf30dl: [{
- *      dark: on
- *      opened: off
- *      preview: bytearray
- *    },{
- *      dark: off
- *      opened: off
- *      preview: bytearray
- *    }]
- * }
- */
+import { validateActiveComponent } from "./lib/utils";
+import { VariantOrganiser } from "./lib/VariantOrganiser";
 
 let activeComponent: undefined | Partial<ComponentSetNode>;
-let variants = [];
+let organiser = new VariantOrganiser();
 
 const DEFAULT_WINDOW_WIDTH = 600;
 const DEFAULT_WINDOW_HEIGHT = 400;
@@ -27,9 +14,8 @@ function activeComponentFromSelection(selection: readonly SceneNode[]) {
   activeComponent = validateActiveComponent(selection[0]);
 
   //Preload preview in cache
-  if (activeComponent) {
-    //console.log(activeComponent.id, activeComponent.children);
-  }
+  if (activeComponent) organiser.init(activeComponent);
+  else organiser.destroy();
 
   figma.ui.postMessage({ action: "UPDATE_ACTIVE_COMPONENT", payload: activeComponent });
 }
@@ -56,11 +42,13 @@ figma.ui.onmessage = async (msg) => {
       activeComponentFromSelection(figma.currentPage.selection);
       break;
 
+    case 'UPDATE_VARIANTS_CONFIGURATION':
+      if (activeComponent) organiser.update(activeComponent, { id: payload.index, value: payload.value });
+      break;
+
   }
 
 };
-
-
 
 figma.loadAllPagesAsync().then(_ => {
 

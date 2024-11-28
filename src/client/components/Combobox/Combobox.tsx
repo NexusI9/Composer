@@ -23,7 +23,7 @@ export interface IComboboxDefaultContent extends IComboboxContent {
 export interface ICombobox {
     label?: string;
     content: IComboboxDefaultContent | IComboboxAsyncContent;
-    onChange: (e: string) => any;
+    onChange: (v: string, i: number) => any;
 }
 
 export default ({ label, content, onChange }: ICombobox) => {
@@ -62,7 +62,7 @@ export default ({ label, content, onChange }: ICombobox) => {
                     ...content.props(value),
                     onClick: () => {
                         content.props.onClick && content.props.onClick();
-                        onChange(value);
+                        onChange(value, i);
                         setActiveIndex(i);
                     },
                     key: value + i + performance.now(),

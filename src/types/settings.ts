@@ -40,4 +40,9 @@ export type UpdateSettingsPayload =
     | { type: ILayerBooleanSettings }
     | { name: ILayerNameSettings };
 
+
+export interface IVariantComponent {
+    id:string;
+    image: string;
+}
     
