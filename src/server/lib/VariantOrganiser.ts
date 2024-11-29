@@ -1,3 +1,4 @@
+import { base64ArrayBuffer } from "./base64";
 import { ComponentCache } from "./ComponentCache";
 import { Configuration } from "./Configuration";
 
@@ -28,7 +29,7 @@ export class VariantOrganiser {
 
     }
 
-    uniqueValues(children: ComponentCache[], key: string) {
+    private uniqueValues(children: ComponentCache[], key: string) {
 
         const obj = { [key]: {} };
         children.forEach(child => {
@@ -41,36 +42,53 @@ export class VariantOrganiser {
             }
         });
 
-        return obj;
+        return obj[key];
     }
 
     /**
      * Organise cache raw data into an ordered table depending on the current configuration
      */
-    cache2Table() {
+    private cache2Table() {
         if (!this.activeComponent || !this.activeComponent.id || !this.cache[this.activeComponent.id]) return;
 
         const component = this.cache[this.activeComponent.id];
         const { x, y } = this.config.dimensions(2, true);
+        const table: string[][] = [];
 
         let row = {};
         let col = {};
-        y.forEach(key => { if (key) col = { ...col, ...this.uniqueValues(component, key) } });
-        x.forEach(key => { if (key) row = { ...row, ...this.uniqueValues(component, key) } });
+        y.forEach(key => { if (key) row = { ...row, ...this.uniqueValues(component, key) } });
+        x.forEach(key => { if (key) col = { ...col, ...this.uniqueValues(component, key) } });
+
+        //Object.keys(col).forEach(colKey => table[0] = [...table[0], colKey]);
+
+        //filter column base on row value
+        /*Object.keys(row).forEach(rowKey => {
+            table.push([]);
+            for (const colKey in col) {
+                table.push([colKey]);
+            }
+        });*/
 
         console.log({ x, y });
         console.log({ row, col });
+        //console.log(table);
 
     }
 
-    async loadPreview(node: SceneNode): Promise<Uint8Array> {
+    private async loadPreview(node: SceneNode): Promise<string> {
 
-        const preview = await node.exportAsync({
+        const bytes = await node.exportAsync({
             format: 'PNG',
             constraint: { type: 'WIDTH', value: 100 },
         });
 
-        return preview;
+        let binary = '';
+        for (var i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+
+        return base64ArrayBuffer(bytes);
     }
 
     destroy() {

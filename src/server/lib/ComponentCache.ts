@@ -4,14 +4,14 @@
 interface IComponentCache{
     name: string;
     id: string;
-    preview: Uint8Array;
+    preview: string;
 }
 
 export class ComponentCache {
 
     name: string;
     id: string;
-    preview: Uint8Array;
+    preview: string;
 
     constructor({ name, id, preview }: IComponentCache) {
         this.name = name;

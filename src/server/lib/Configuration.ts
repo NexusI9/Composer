@@ -40,8 +40,11 @@ export class Configuration<T> {
 
     dimensions(split: number, filter: boolean = false) {
         let cache = [...this.data]; //copy
-        if (filter) cache = cache.filter(n => !!n);
         let rest = cache.splice(0, cache.length / split);
+        if (filter) {
+            cache = cache.filter(n => !!n);
+            rest = rest.filter(n => !!n);
+        }
         return { x: rest, y: cache }
     }
 
