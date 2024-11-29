@@ -29,20 +29,20 @@ export class VariantOrganiser {
 
     }
 
-    private uniqueValues(children: ComponentCache[], key: string) {
+    private uniqueValues(children: ComponentCache[], key1: string, key2: string | undefined = undefined) {
 
-        const obj = { [key]: {} };
+        const obj = { [key1]: {} };
         children.forEach(child => {
             const nameObj = child.nameObject;
             for (const k in nameObj) {
-                if (k == key) {
-                    let o = obj[key][nameObj[k] as keyof typeof obj[typeof key]];
-                    obj[key] = { ...obj[key], [nameObj[k]]: o ? [...o, child] : [child] };
+                if (k == key1) {
+                    let o = obj[key1][nameObj[k] as keyof typeof obj[typeof key1]];
+                    obj[key1] = { ...obj[key1], [nameObj[k]]: o ? [...o, child] : [child] };
                 }
             }
         });
 
-        return obj[key];
+        return obj;
     }
 
     /**
@@ -57,20 +57,12 @@ export class VariantOrganiser {
 
         let row = {};
         let col = {};
+
         y.forEach(key => { if (key) row = { ...row, ...this.uniqueValues(component, key) } });
-        x.forEach(key => { if (key) col = { ...col, ...this.uniqueValues(component, key) } });
+        x.forEach(key => { if (key) col = { ...col, ...this.uniqueValues(component, key) } }); 
 
-        //Object.keys(col).forEach(colKey => table[0] = [...table[0], colKey]);
 
-        //filter column base on row value
-        /*Object.keys(row).forEach(rowKey => {
-            table.push([]);
-            for (const colKey in col) {
-                table.push([colKey]);
-            }
-        });*/
-
-        console.log({ x, y });
+        //console.log({ x, y });
         console.log({ row, col });
         //console.log(table);
 
