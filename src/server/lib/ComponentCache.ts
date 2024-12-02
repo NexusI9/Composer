@@ -1,7 +1,7 @@
 
 
 
-interface IComponentCache{
+interface IComponentCache {
     name: string;
     id: string;
     preview: string;
@@ -27,6 +27,19 @@ export class ComponentCache {
         });
 
         return obj;
+    }
+
+    hasKeyValue({ key, value }: { key: string, value: string }): boolean {
+        console.log({ key, value, object: this.nameObject });
+        let has = false;
+        for (const k in this.nameObject) {
+            if (k == key && value == this.nameObject[k as keyof typeof this.nameObject]) {
+                has = true;
+                break;
+            }
+        }
+
+        return has;
     }
 
 

@@ -22,6 +22,10 @@ export class Configuration<T> {
         return this.data.join(',');
     }
 
+    indexOf(s: T) {
+        return this.data.indexOf(s);
+    }
+
     filter() {
         return this.data.filter(item => !!item);
     }

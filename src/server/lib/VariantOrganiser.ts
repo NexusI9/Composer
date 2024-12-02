@@ -1,3 +1,4 @@
+import { Table } from "./Table";
 import { base64ArrayBuffer } from "./base64";
 import { ComponentCache } from "./ComponentCache";
 import { Configuration } from "./Configuration";
@@ -29,20 +30,36 @@ export class VariantOrganiser {
 
     }
 
-    private uniqueValues(children: ComponentCache[], key1: string, key2: string | undefined = undefined) {
+    private tree(children: ComponentCache[], keys: string[], parent: any = {}, fullpath: string[] = []) {
 
-        const obj = { [key1]: {} };
+        const [currentKey, ...rest] = keys.slice(0);
+
+        //filter out children that does not belong to the branch from fullpath (previous branch)
+        if (!!fullpath.length) {
+            const regExp = new RegExp(String.raw`${fullpath.join('.+')}`, 'g');
+            children = children.filter(({ name }) => regExp.test(name));
+        }
+
+        //console.log(fullpath);
         children.forEach(child => {
             const nameObj = child.nameObject;
+
             for (const k in nameObj) {
-                if (k == key1) {
-                    let o = obj[key1][nameObj[k] as keyof typeof obj[typeof key1]];
-                    obj[key1] = { ...obj[key1], [nameObj[k]]: o ? [...o, child] : [child] };
+                if (k === currentKey) {
+                    const value = nameObj[k];
+                    if (!!rest.length) {
+                        parent[value] = this.tree(children, rest, parent[k as keyof typeof parent], [...fullpath, `${currentKey}=${value}`]); //append new variants
+                    } else {
+                        if (parent[value]) parent[value].push(child);
+                        else parent[value] = [child];
+                    }
                 }
+
             }
+
         });
 
-        return obj;
+        return parent;
     }
 
     /**
@@ -52,18 +69,77 @@ export class VariantOrganiser {
         if (!this.activeComponent || !this.activeComponent.id || !this.cache[this.activeComponent.id]) return;
 
         const component = this.cache[this.activeComponent.id];
-        const { x, y } = this.config.dimensions(2, true);
+
+        /**
+         * 1. Build Tree of component
+         * Build children tree depending on the configuration data ([State 1, State 2, State 3...])
+         * Reverse the array because to fit HTML table structure we fist need the rows (which are the second parameters in our UI)
+         * <row><col1><col2><coln></row>
+         * Such structure implies that we want our final content to end in the column, not the row, hence the reverse
+         */
+        const tree = this.tree(component, this.config.data.filter(n => !!n).reverse() as string[]);
+
+        /**
+         * 2. Segment the tree into row and columns for HTML firendly output
+         * According on configuration raw data [ s1, undefined, s2, undefined ] we can set which levels are rows and which levels are columns
+         * We know that index 0 and 1 and columns and 2 and 3 are rows
+         * 
+         * Buffer:
+         *      |      COL       |       ROW     |
+         *      [   1   ,   0    |   1   ,   1   ]
+         *          |               |       |
+         * Data:    |               |       |
+         *          |               |       L_____
+         *      [   s1  ]           |             |
+         *           L---------[   s2   ]         |
+         *                          L--------[   s3  ]
+         */
+
         const table: string[][] = [];
+        //prefill table
 
-        let row = {};
-        let col = {};
+        let cursor = 0;
+        let row = 0;
+        //console.log(this.config.data);
+        for (const key in tree) {
 
-        y.forEach(key => { if (key) row = { ...row, ...this.uniqueValues(component, key) } });
-        x.forEach(key => { if (key) col = { ...col, ...this.uniqueValues(component, key) } }); 
+            const child = tree[key];
+            //Define if key is row or col depending on config state 
+            while (!this.config.data[cursor]) cursor++ % this.config.data.length;
+
+            //set row
+            if (cursor > 1) {
+                //console.log({ cursor, key });
+                table.push([key]);
+
+                for (const c of child) {
+                    table[row].push(c.name);
+                }
+            }
+
+            //set col
+            else {
+
+                //Add new row by default
+                /*if (table[row]) table[row].push('');
+                else table[row] = [''];
+
+                for (const item of value) {
+                    row++;
+                    table[row].push(item.name);
+                }*/
+
+                //col++;
+            }
+
+            row++;
+
+        }
 
 
         //console.log({ x, y });
-        console.log({ row, col });
+        console.log(tree);
+        //console.log(table);
         //console.log(table);
 
     }
