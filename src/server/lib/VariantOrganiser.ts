@@ -34,11 +34,19 @@ export class VariantOrganiser {
 
         const [currentKey, ...rest] = keys.slice(0);
 
+
         //filter out children that does not belong to the branch from fullpath (previous branch)
         if (!!fullpath.length) {
-            const regExp = new RegExp(String.raw`${fullpath.join('.+')}`, 'g');
-            children = children.filter(({ name }) => regExp.test(name));
+
+            children = children.filter(({ name }) => {
+                let match = 0;
+                for (const path of fullpath) {
+                    if (name.match(path)) match++;
+                }
+                return match == fullpath.length;
+            });
         }
+
 
         //console.log(fullpath);
         children.forEach(child => {
@@ -46,9 +54,9 @@ export class VariantOrganiser {
 
             for (const k in nameObj) {
                 if (k === currentKey) {
-                    const value = nameObj[k];
+                    const value = `${currentKey}=${nameObj[k]}`; //nameObj[k];
                     if (!!rest.length) {
-                        parent[value] = this.tree(children, rest, parent[k as keyof typeof parent], [...fullpath, `${currentKey}=${value}`]); //append new variants
+                        parent[value] = this.tree(children, rest, parent[k as keyof typeof parent], [...fullpath, `${currentKey}=${nameObj[k]}`]); //append new variants
                     } else {
                         if (parent[value]) parent[value].push(child);
                         else parent[value] = [child];
@@ -97,29 +105,31 @@ export class VariantOrganiser {
 
         const table: string[][] = [];
         //prefill table
-
+        console.log(this.config.data);
         let cursor = 0;
         let row = 0;
-        //console.log(this.config.data);
-        for (const key in tree) {
+        let level = tree;
 
+        //console.log(this.config.data);
+        for (const key in level) {
+            break;
             const child = tree[key];
             //Define if key is row or col depending on config state 
             while (!this.config.data[cursor]) cursor++ % this.config.data.length;
 
             //set row
             if (cursor > 1) {
-                //console.log({ cursor, key });
-                table.push([key]);
+                console.log(`row: ${key}`);
+                /*table.push([key]);
 
                 for (const c of child) {
                     table[row].push(c.name);
-                }
+                }*/
             }
 
             //set col
             else {
-
+                console.log(`column: ${key}`);
                 //Add new row by default
                 /*if (table[row]) table[row].push('');
                 else table[row] = [''];
@@ -132,6 +142,7 @@ export class VariantOrganiser {
                 //col++;
             }
 
+            cursor++;
             row++;
 
         }
