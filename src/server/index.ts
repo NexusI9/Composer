@@ -43,7 +43,13 @@ figma.ui.onmessage = async (msg) => {
       break;
 
     case 'UPDATE_VARIANTS_CONFIGURATION':
-      if (activeComponent) organiser.update(activeComponent, { id: payload.index, value: payload.value });
+      if (activeComponent) {
+        figma.ui.postMessage({
+          ...msg,
+          action: "UPDATE_TABLE",
+          payload: organiser.update(activeComponent, { id: payload.index, value: payload.value })
+        });
+      }
       break;
 
   }

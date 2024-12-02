@@ -4,6 +4,7 @@ import { ComponentCache } from "./ComponentCache";
 import { Configuration } from "./Configuration";
 
 interface IIndexKeyVal { id: number; value: string; };
+export interface ITreeConfig { tree: object; config: (string | undefined)[]; }
 
 export class VariantOrganiser {
 
@@ -11,6 +12,7 @@ export class VariantOrganiser {
     config: Configuration<string> = new Configuration(4);
     current = {};
     activeComponent: Partial<ComponentSetNode> | undefined;
+    table: string[][] = [];
 
     /**
      * Put the component in cache if doesn't exist (and generate preview)
@@ -47,16 +49,15 @@ export class VariantOrganiser {
             });
         }
 
-
-        //console.log(fullpath);
+        //Either append the child components in the right branch of dig more
         children.forEach(child => {
             const nameObj = child.nameObject;
 
             for (const k in nameObj) {
                 if (k === currentKey) {
-                    const value = `${currentKey}=${nameObj[k]}`; //nameObj[k];
+                    const value = nameObj[k]; //nameObj[k];
                     if (!!rest.length) {
-                        parent[value] = this.tree(children, rest, parent[k as keyof typeof parent], [...fullpath, `${currentKey}=${nameObj[k]}`]); //append new variants
+                        parent[value] = this.tree(children, rest, parent[k as keyof typeof parent], [...fullpath, `${currentKey}=${value}`]); //append new variants
                     } else {
                         if (parent[value]) parent[value].push(child);
                         else parent[value] = [child];
@@ -73,7 +74,7 @@ export class VariantOrganiser {
     /**
      * Organise cache raw data into an ordered table depending on the current configuration
      */
-    private cache2Table() {
+    private cache2Tree() {
         if (!this.activeComponent || !this.activeComponent.id || !this.cache[this.activeComponent.id]) return;
 
         const component = this.cache[this.activeComponent.id];
@@ -85,74 +86,9 @@ export class VariantOrganiser {
          * <row><col1><col2><coln></row>
          * Such structure implies that we want our final content to end in the column, not the row, hence the reverse
          */
-        const tree = this.tree(component, this.config.data.filter(n => !!n).reverse() as string[]);
+        const tree = this.tree(component, this.config.data.filter(n => !!n) as string[]);
 
-        /**
-         * 2. Segment the tree into row and columns for HTML firendly output
-         * According on configuration raw data [ s1, undefined, s2, undefined ] we can set which levels are rows and which levels are columns
-         * We know that index 0 and 1 and columns and 2 and 3 are rows
-         * 
-         * Buffer:
-         *      |      COL       |       ROW     |
-         *      [   1   ,   0    |   1   ,   1   ]
-         *          |               |       |
-         * Data:    |               |       |
-         *          |               |       L_____
-         *      [   s1  ]           |             |
-         *           L---------[   s2   ]         |
-         *                          L--------[   s3  ]
-         */
-
-        const table: string[][] = [];
-        //prefill table
-        console.log(this.config.data);
-        let cursor = 0;
-        let row = 0;
-        let level = tree;
-
-        //console.log(this.config.data);
-        for (const key in level) {
-            break;
-            const child = tree[key];
-            //Define if key is row or col depending on config state 
-            while (!this.config.data[cursor]) cursor++ % this.config.data.length;
-
-            //set row
-            if (cursor > 1) {
-                console.log(`row: ${key}`);
-                /*table.push([key]);
-
-                for (const c of child) {
-                    table[row].push(c.name);
-                }*/
-            }
-
-            //set col
-            else {
-                console.log(`column: ${key}`);
-                //Add new row by default
-                /*if (table[row]) table[row].push('');
-                else table[row] = [''];
-
-                for (const item of value) {
-                    row++;
-                    table[row].push(item.name);
-                }*/
-
-                //col++;
-            }
-
-            cursor++;
-            row++;
-
-        }
-
-
-        //console.log({ x, y });
-        console.log(tree);
-        //console.log(table);
-        //console.log(table);
-
+        return tree;
     }
 
     private async loadPreview(node: SceneNode): Promise<string> {
@@ -174,13 +110,21 @@ export class VariantOrganiser {
 
     }
 
-    update(set: Partial<ComponentSetNode>, { id, value }: IIndexKeyVal) {
+    update(set: Partial<ComponentSetNode>, { id, value }: IIndexKeyVal): ITreeConfig {
 
-        if (!set.id) return;
+        if (!set.id) return {
+            config: [],
+            tree: {}
+        };
 
         //Update configuration array
         this.config.allocate(id, value);
-        this.cache2Table();
+
+        return {
+            config: this.config.data,
+            tree: this.cache2Tree()
+        }
+
     }
 
 

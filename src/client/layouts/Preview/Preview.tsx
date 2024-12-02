@@ -3,6 +3,8 @@ import { Text } from "@radix-ui/themes";
 import { useState } from "react";
 import ComponentIcon from "@icons/component.svg";
 import "./Preview.scss";
+import Matrix from "./Matrix";
+
 
 export default () => {
 
@@ -17,6 +19,7 @@ export default () => {
                         <header>
                             <Text size="1" className="flex f-row f-center-h gap-s">Preview for <span className="flex f-row gap-xs f-center-h"><ComponentIcon />{active.name}</span></Text>
                         </header>
+                        <Matrix />
                     </>
                     || <Text size="1">Select a component with variants to begin.</Text>
                 }
