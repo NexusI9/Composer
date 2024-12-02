@@ -7,9 +7,11 @@ interface ITraverse extends ITreeConfig {
     depth: number;
     level?: number;
     cursor?: number;
+    col?: number;
 }
 
-export function traverse({ source, config, tree, depth, level = 0, cursor = 0 }: ITraverse) {
+export function traverse({ source, config, tree, depth, level = 0, cursor = 0, col = 0 }: ITraverse) {
+
     /**
      * Convert the tree structure into a flatten array in which each level is orderer by ROWS, meaning that the rows actually 
      * holds the data. Such approach will simplify the HTML table creation since the rows contain columns <tr><td>{data}</td></tr>
@@ -21,7 +23,7 @@ export function traverse({ source, config, tree, depth, level = 0, cursor = 0 }:
         : (!config[0] || !config[1]) && (config[2] || config[3]) ? "ROW_LAYOUT"
             : "CROSS_LAYOUT";
 
-    let pass = 0;
+    let s = 0;
     for (const key in tree) {
         let innerCursor = cursor;
         let innerLevel = level;
@@ -59,14 +61,16 @@ export function traverse({ source, config, tree, depth, level = 0, cursor = 0 }:
             switch (layout) {
 
                 case "COLUMN_LAYOUT":
-                    comps.forEach((item) => {
-                        source.body[source.body.length] = [{
+                    source.body[col] = [...(source.body[col] || [])];
+                    source.body[col][s] = comps.map((item, i) => {
+                        //oid (console.log("[" + col + "," + level + "]\t", key, "=>", item.name));
+                        return ({
                             value: item.name,
                             span: lastLevel ? 1 : Object.keys(tree[key as keyof typeof tree]).length,
-                        }];
-                    });
+                        })
+                    }
+                    );
                     break;
-
 
                 case "ROW_LAYOUT":
                 case "CROSS_LAYOUT":
@@ -78,7 +82,7 @@ export function traverse({ source, config, tree, depth, level = 0, cursor = 0 }:
 
             //console.log(tree[key as keyof typeof tree]);
         }
-        console.log({ innerLevel, depth, cursor, pass }, rowCol, key);
+        //console.log({ innerLevel, depth, cursor, col }, rowCol, key);
 
         if (depth > 1 && !lastLevel) {
             //Dig deeper and add a row
@@ -89,12 +93,13 @@ export function traverse({ source, config, tree, depth, level = 0, cursor = 0 }:
                 config,
                 tree: tree[key as keyof typeof tree],
                 depth,
+                col,
                 level: innerLevel,
                 cursor: innerCursor
             });
         }
 
-        pass++;
+        col++;
 
     }
 

@@ -12,7 +12,6 @@ export class VariantOrganiser {
     config: Configuration<string> = new Configuration(4);
     current = {};
     activeComponent: Partial<ComponentSetNode> | undefined;
-    table: string[][] = [];
 
     /**
      * Put the component in cache if doesn't exist (and generate preview)
@@ -29,6 +28,13 @@ export class VariantOrganiser {
                 preview: await this.loadPreview(item)
             })));
         }
+
+    }
+
+
+    private table(children: ComponentCache[], keys: (string | undefined)[]) {
+
+        
 
     }
 
@@ -87,6 +93,8 @@ export class VariantOrganiser {
          * Such structure implies that we want our final content to end in the column, not the row, hence the reverse
          */
         const tree = this.tree(component, this.config.data.filter(n => !!n) as string[]);
+
+        this.table(component, this.config.data);
 
         return tree;
     }

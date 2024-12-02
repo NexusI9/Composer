@@ -10,7 +10,7 @@ export interface IMatrixCell {
 
 export interface IMatrix {
     header: IMatrixCell[][];
-    body: IMatrixCell[][];
+    body: IMatrixCell[][][];
 }
 
 export default () => {
