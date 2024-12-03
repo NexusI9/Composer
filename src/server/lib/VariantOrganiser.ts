@@ -38,7 +38,7 @@ export class VariantOrganiser {
     }
 
 
-    private traverse<T>({ tree, onLast, level = 0, index = { relative: 0, absolute: 0 } }: { tree: T[]; onLast?: (group: T[], index: IIndex) => any; readonly level?: number, readonly index?: IIndex }) {
+    private traverse<T>({ tree, onLast, onBeforeLast, level = 0, index = { relative: 0, absolute: 0 } }: { tree: T[]; onLast?: (group: T[], index: IIndex) => any; onBeforeLast?: (tree: Object, index: IIndex) => any; readonly level?: number, readonly index?: IIndex }) {
 
         const length = this.config.filter().length;
 
@@ -47,35 +47,17 @@ export class VariantOrganiser {
             this.#groupCount++;
             if (onLast) onLast(tree, index);
         } else {
+            if (onBeforeLast && ((length > 1 && level == length - 1) || length == 1)) onBeforeLast(tree, index);
             level++;
             Object.keys(tree).forEach((key, i) => this.traverse({
                 tree: tree[key as keyof typeof tree] as T[],
                 onLast,
+                onBeforeLast,
                 level: level,
                 index: { relative: i, absolute: this.#groupCount }
             }));
         }
 
-
-    }
-
-    private table(children: ComponentCache[], keys: string[]) {
-
-        switch (this.config.layout) {
-
-            case "COLUMN":
-
-                break;
-
-            case "ROW":
-
-                break;
-
-            case "CROSS_MONO":
-
-                break;
-
-        }
 
     }
 
@@ -127,12 +109,14 @@ export class VariantOrganiser {
         const component = this.cache[this.activeComponent.id];
 
         /**
-         * 1. Build Tree of component
+         * Build Tree of component
          * Build children tree depending on the configuration data ([State 1, State 2, State 3...])
          * Reverse the array because to fit HTML table structure we fist need the rows (which are the second parameters in our UI)
          * <row><col1><col2><coln></row>
          * Such structure implies that we want our final content to end in the column, not the row, hence the reverse
+         * 
          */
+
         const list = this.config.data.filter(n => !!n);
         const tree = this.tree(component, (reverse ? list.reverse() : list) as string[]);
 
@@ -177,7 +161,6 @@ export class VariantOrganiser {
 
     async update(set: Partial<ComponentSetNode>, { id, value }: IIndexKeyVal): Promise<ITreeConfig> {
 
-
         if (!set.id || !this.activeComponent?.id) return {
             config: [],
             tree: {}
@@ -198,14 +181,60 @@ export class VariantOrganiser {
         console.log(tree);
 
         /**
-         * Arrange component differently depending on layout type
+         * ## CONTEXT:
+         * Arrange component differently depending on layout type from {Object} => [Table]
          * { A: B: { [C],[D],[E] }} => [[C],[D],[E]]
+         * The current process first establishes a tree to segment the different types of components based on filters
+         * 
+         * ## ISSUE:
+         * However the issue with this approach is that the output tree is completely "major order" agnostic. 
+         * This is also due to the flexiblity of the plugin that allows a "column-strict" layout, hence the necessity to store 
+         * the components in a "neutral" structure either for rows or columns-strict layout.
+         * Hence our output tree does not give any hints on how to layout its components, it simply dispatches them through distinct branches 
+         * 
+         * ## SOLUTION:
+         * The goal of the below method will be to transform the tree into a ROW-Major order matrix, so we shall reduce it's translation to table 
+         * and the ≠ approaches to lay out the components.
+         * 
          * */
+
         this.#groupCount = 0;
-        const groups: IGroup[] = [];
+        const groups: ComponentCache[][] = [];
+        let row = 0;
+        let col = 0;
+
+        //Traverse the object and rearrange its content to fit a Row-Major order matrix (multi-dim array) in function of the layout configuration
+        //TODO: Maybe do it directly in parallel of the tree creation so maybe don't even need tree anymore
         this.traverse<ComponentCache>({
             tree: tree,
-            onLast: (group, index) => groups.push({ items: group, index })
+            onBeforeLast: (tree, index) => {
+                for (const key in tree) {
+                    const value = tree[key as keyof typeof tree] as any;
+
+                    //Handle 1D cases
+                    if (layout == "COLUMN") {
+                        //For [[A1,A2,A3],[B1,B2,B3],[C1,C2,C3]] :
+                        // [[A1,B1,C1],
+                        //  [A2,B2,C2],
+                        //  [A3,B3,C3]]
+                        for (let v = 0; v < value.length; v++) {
+                            if (!groups[v]) groups[v] = [];
+                            groups[v][col] = value[v];
+                        }
+
+                    } if (layout == "ROW") {
+                        groups.push(value);
+                    }
+
+                    //Handle 2D (i.e. cross) cases
+                    else {
+                        //Concat each "one before last" array to one, so each groups index = one new row and the elements inside shall be columns
+                        groups[row] = [...(groups[row] || []), ...value];
+                    }
+                    col++;
+                };
+                row++;
+            }
         });
 
 
@@ -216,15 +245,17 @@ export class VariantOrganiser {
         const maxSize: Rect = {
             x: 0,
             y: 0,
-            width: groups.map(child => child.items.map(item => item.size.width).reduce((a, b) => Math.max(a, b))).reduce((a, b) => Math.max(a, b)),
-            height: groups.map(child => child.items.map(item => item.size.height).reduce((a, b) => Math.max(a, b))).reduce((a, b) => Math.max(a, b))
+            width: groups.map(child => child.map(item => item.size.width).reduce((a, b) => Math.max(a, b))).reduce((a, b) => Math.max(a, b)),
+            height: groups.map(child => child.map(item => item.size.height).reduce((a, b) => Math.max(a, b))).reduce((a, b) => Math.max(a, b))
         };
 
         let offset = 0;
-        console.log(groups.map(item => item.items.map(it => it.name)));
+        console.log(groups);
+        console.log(groups.map(item => item.map(it => it.name)));
+
         await Promise.all(groups.map(async (gp, i) => {
 
-            return await Promise.all(gp.items.map(async (child, j) => {
+            return await Promise.all(gp.map(async (child, j) => {
                 const node = await figma.getNodeByIdAsync(child.id);
                 if (node && node.type == "COMPONENT") {
 
@@ -235,9 +266,9 @@ export class VariantOrganiser {
 
                     //Get previous dimension max size to align on grid
                     const prev = {
-                        width: i > 0 ? groups[i - 1].items.map(item => item.size.width).reduce((a, b) => Math.max(a, b)) : 0, // get max width of the previous column
-                        height: i > 0 && j > 0 ? groups.map(item => item.items[j - 1]?.size.height).filter(n => !!n).reduce((a, b) => Math.max(a, b)) //If advanced in the grid, refers to previous items in the grid within the same row
-                            : i == 0 && j > 0 ? gp.items[j - 1].size.height //If first column, simply refers to elements above
+                        width: i > 0 ? groups[i - 1].map(item => item.size.width).reduce((a, b) => Math.max(a, b)) : 0, // get max width of the previous column
+                        height: i > 0 && j > 0 ? groups.map(item => item[j - 1]?.size.height).filter(n => !!n).reduce((a, b) => Math.max(a, b)) //If advanced in the grid, refers to previous items in the grid within the same row
+                            : i == 0 && j > 0 ? gp[j - 1].size.height //If first column, simply refers to elements above
                                 : 0
                     };
 
@@ -256,9 +287,8 @@ export class VariantOrganiser {
 
                         case "CROSS_MONO": // 1 col + 2 row
                             const prevLength = i > 0 ? offset : 0;
-                            console.log(i, j, gp.index.relative, child.name);
                             x = ((maxSize.width + this.margin) * j) + (Math.floor(i / 2) * (maxSize.width + this.margin));
-                            y = gp.index.relative * (maxSize.height + this.margin);
+                            //y = gp.index.relative * (maxSize.height + this.margin);
                             //tidy up programatically the items
 
                             break;
@@ -284,7 +314,6 @@ export class VariantOrganiser {
                         height: Math.max(bounds.height, node.y + child.size.height + this.margin)
                     };
 
-                    offset++;
                 }
             }));
         }));
