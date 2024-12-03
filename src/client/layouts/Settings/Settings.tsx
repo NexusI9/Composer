@@ -5,6 +5,7 @@ import ComboboxText from "@components/Combobox/Combobox.Text";
 import ComponentContext from "@components/ComponentContext/ComponentContext";
 import { Button, Text } from "@radix-ui/themes";
 import { Children, createElement, FunctionComponent, useEffect, useState } from "react";
+import ComponentIcon from "@icons/component.svg";
 
 interface IParamItem {
     element: FunctionComponent<Object>;
@@ -19,7 +20,7 @@ interface IParam {
 
 export default () => {
 
-    const [active, setActive] = useState(false);
+    const [active, setActive] = useState<ComponentSetNode>();
     const [activeVariants, setActiveVariants] = useState<string[]>([]);
     const [parameters, setParameters] = useState<IParam[]>([]);
 
@@ -42,7 +43,7 @@ export default () => {
                 content: {
                     key: active, //append a key so Combobox only reload when this key changes instead of the whole content
                     type: "ASYNC",
-                    placeholder: "Loading...",
+                    placeholder: "None",
                     action: "GET_ACTIVE_COMPONENT_VARIANTS_KEY",
                     transformer: (e: IRequest) => {
                         //Add empty initial value
@@ -81,10 +82,10 @@ export default () => {
     useEffect(() => { setActiveVariants([]); }, [active]);
 
     return (
-        <ComponentContext onChange={(e: any) => setActive(e?.id)}>
-            <div className="settings color-bg-base-900 padding-xl flex f-end" data-active={!!active}>
+        <ComponentContext onChange={(e: any) => setActive(e)}>
+            <div className="settings padding-xl flex full-width">
                 <div className="settings-wrapper full-height flex f-col gap-2xl f-center-h f-between">
-                    <div className="flex f-col gap-2xl">
+                    <div className="flex f-col gap-2xl full-width">
                         {parameters.map(({ heading, options }, i) => <div className="flex f-col gap-m" key={`param${i}`}>
                             <Text size="1" weight="bold">{heading}</Text>
                             <div className="flex f-row gap-m">
@@ -97,8 +98,16 @@ export default () => {
 
                     </div>
 
-                    <Button className="full-width">Organize</Button>
+                    <div className="flex f-col gap-m full-width">
+                        <Button>Confirm</Button>
+                        <Button color="crimson" onClick={() => send({ action: "RESET" })} variant="outline">Reset</Button>
+                    </div>
+
                 </div>
+                {<div className="settings-overlay full-width full-height flex f-col gap-m f-center padding-4xl text-center" data-display={!!!active}>
+                    <Text size="4">Composer</Text>
+                    <Text size="2">Select a component with variants to begin.</Text>
+                </div>}
             </div>
         </ComponentContext>);
 }

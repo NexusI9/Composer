@@ -6,6 +6,8 @@ import { Configuration } from "./Configuration";
 interface IIndexKeyVal { id: number; value: string; };
 export interface ITreeConfig { tree: object; config: (string | undefined)[]; }
 
+const MARGIN = 20;
+
 export class VariantOrganiser {
 
     cache: { [key: string]: ComponentCache[] } = {};
@@ -25,7 +27,9 @@ export class VariantOrganiser {
             this.cache[set.id] = await Promise.all(set.children.map(async item => new ComponentCache({
                 name: item.name,
                 id: item.id,
-                preview: await this.loadPreview(item)
+                preview: await this.loadPreview(item),
+                position: { x: item.x, y: item.y },
+                size: { width: item.width, height: item.height }
             })));
         }
 
@@ -34,7 +38,7 @@ export class VariantOrganiser {
 
     private table(children: ComponentCache[], keys: (string | undefined)[]) {
 
-        
+
 
     }
 
@@ -93,9 +97,7 @@ export class VariantOrganiser {
          * Such structure implies that we want our final content to end in the column, not the row, hence the reverse
          */
         const tree = this.tree(component, this.config.data.filter(n => !!n) as string[]);
-
-        this.table(component, this.config.data);
-
+        
         return tree;
     }
 
@@ -127,11 +129,44 @@ export class VariantOrganiser {
 
         //Update configuration array
         this.config.allocate(id, value);
+        const tree = this.cache2Tree();
+        console.log(tree);
+        //Arrange component differently depending on layout type
+        switch (this.config.layout) {
+
+            case "COLUMN":
+
+                break;
+
+            case "ROW":
+                break;
+
+            case "CROSS":
+                break;
+
+
+        }
 
         return {
             config: this.config.data,
-            tree: this.cache2Tree()
+            tree
         }
+
+    }
+
+    async reset() {
+
+        if (!this.activeComponent || !this.activeComponent.id || !this.cache[this.activeComponent.id]) return;
+        const component = this.cache[this.activeComponent.id];
+        //reset children to initial place
+        Promise.all(component.map(async child => {
+            const node = await figma.getNodeByIdAsync(child.id);
+            if (node && node.type == "COMPONENT") {
+                node.x = child.position.x;
+                node.y = child.position.y;
+            }
+        }));
+
 
     }
 

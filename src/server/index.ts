@@ -6,7 +6,7 @@ import { VariantOrganiser } from "./lib/VariantOrganiser";
 let activeComponent: undefined | Partial<ComponentSetNode>;
 let organiser = new VariantOrganiser();
 
-const DEFAULT_WINDOW_WIDTH = 600;
+const DEFAULT_WINDOW_WIDTH = 250;
 const DEFAULT_WINDOW_HEIGHT = 400;
 
 function activeComponentFromSelection(selection: readonly SceneNode[]) {
@@ -31,7 +31,7 @@ figma.ui.onmessage = async (msg) => {
   switch (action) {
 
     case 'RESIZE_WINDOW':
-      figma.ui.resize(Math.max(payload.width, 540) || DEFAULT_WINDOW_WIDTH, Math.max(payload.height, 320) || DEFAULT_WINDOW_HEIGHT);
+      figma.ui.resize(Math.max(payload.width, 250) || DEFAULT_WINDOW_WIDTH, Math.max(payload.height, 320) || DEFAULT_WINDOW_HEIGHT);
       break;
 
     case 'GET_ACTIVE_COMPONENT_VARIANTS_KEY':
@@ -51,6 +51,10 @@ figma.ui.onmessage = async (msg) => {
         });
       }
       break;
+
+      case 'RESET':
+       organiser.reset();
+        break;
 
   }
 

@@ -29,7 +29,7 @@ export function traverse({ source, config, tree, depth, level = 0, cursor = 0, c
         let innerLevel = level;
         const lastLevel = !(innerLevel < depth - 1);
 
-        console.log(rowCol, key, level);
+        //console.log(rowCol, key, level);
         //Set table heading value
         if (rowCol == "col") {
             //Simply appends the column names in the table, rows will hold the actual value (i.e. components)

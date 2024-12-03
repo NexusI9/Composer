@@ -54,7 +54,7 @@ export default () => {
                     depth: config.filter((n: any) => !!n).length
                 });
 
-                console.log(mtx);
+                //console.log(mtx);
                 setMatrix(mtx);
 
                 break;

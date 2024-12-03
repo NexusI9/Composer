@@ -18,17 +18,14 @@ import { Resizer } from "@components/Resizer";
 
 export default () => {
 
-    
+
     return (<Theme
         appearance="dark"
         accentColor="blue"
         radius="small"
         style={{ background: "#1E1E1E" }}
     >
-        <div className="container flex f-row gap-l full-height">
-            <Settings />
-            <Preview />
-        </div>
-        <Resizer/>
+        <Settings />
+        <Resizer />
     </Theme>);
 }

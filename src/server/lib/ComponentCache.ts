@@ -5,6 +5,8 @@ export interface IComponentCache {
     name: string;
     id: string;
     preview: string;
+    position: { x: number; y: number; };
+    size: { width: number; height: number };
 }
 
 export class ComponentCache {
@@ -12,11 +14,13 @@ export class ComponentCache {
     name: string;
     id: string;
     preview: string;
+    position: IComponentCache["position"];
 
-    constructor({ name, id, preview }: IComponentCache) {
+    constructor({ name, id, preview, position }: IComponentCache) {
         this.name = name;
         this.id = id;
         this.preview = preview;
+        this.position = position;
     }
 
     get nameObject() {

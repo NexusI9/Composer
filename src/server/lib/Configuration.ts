@@ -11,7 +11,12 @@ export class Configuration<T> {
     split(n: number) {
         //Split the array into n equal part
 
+    }
 
+    get layout(){
+        return (this.data[0] || this.data[1]) && (!this.data[2] || !this.data[3]) ? "COLUMN"
+        : (!this.data[0] || !this.data[1]) && (this.data[2] || this.data[3]) ? "ROW"
+            : "CROSS";
     }
 
     get filled() {
