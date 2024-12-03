@@ -13,10 +13,26 @@ export class Configuration<T> {
 
     }
 
-    get layout(){
-        return (this.data[0] || this.data[1]) && (!this.data[2] || !this.data[3]) ? "COLUMN"
-        : (!this.data[0] || !this.data[1]) && (this.data[2] || this.data[3]) ? "ROW"
-            : "CROSS";
+    get layout() {
+
+        /**
+         * CF Setting UI:
+         * 
+         * Column:
+         * [  0  v] [  1  v]
+         * 
+         * Row:
+         * [  2  v] [  3  v]
+         * 
+         */
+        //Hard code the different layouts
+        return (this.data[0] || this.data[1]) && !this.data[2] && !this.data[3] ? "COLUMN"
+            : !this.data[0] && !this.data[1] && (this.data[2] || this.data[3]) ? "ROW"
+                : this.data[0] && this.data[1] && this.data[2] && this.data[3] ? "CROSS"
+                    : (this.data[0] || this.data[1]) && this.data[2] && this.data[3] ? "CROSS_ROW"
+                        : this.data[0] && this.data[1] && (this.data[2] || !this.data[3]) ? "CROSS_COL"
+                            : (this.data[0] || this.data[1]) && (this.data[2] || this.data[3]) ? "CROSS_MONO"
+                                : "UNKNOWN";
     }
 
     get filled() {
