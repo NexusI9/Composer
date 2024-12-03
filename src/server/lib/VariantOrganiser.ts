@@ -138,7 +138,7 @@ export class VariantOrganiser {
         node.clipsContent = false;
         const { width, height } = node.absoluteRenderBounds || { width: undefined, height: undefined };
         if (width && height) node.resizeWithoutConstraints(width, height);
-        //node.clipsContent = initClip;
+        node.clipsContent = initClip;
     }
 
     destroy() {
@@ -175,22 +175,19 @@ export class VariantOrganiser {
                 let x = child.position.x;
                 let y = child.position.y;
 
+
                 switch (this.config.layout) {
 
                     case "COLUMN":
-                        console.log(`${child.name}`);
+                    case "ROW":
                         const prev = {
                             width: i > 0 ? groups[i - 1].map(item => item.size.width).reduce((a, b) => Math.max(a, b)) : 0, // get max width of the previous column
                             height: i > 0 && j > 0 ? groups.map(item => item[j - 1]?.size.height).filter(n => !!n).reduce((a, b) => Math.max(a, b)) //If advanced in the grid, refers to previous items in the grid within the same row
                                 : i == 0 && j > 0 ? gp[j - 1].size.height //If first column, simply refers to elements above
                                     : 0
-                        }
-                        console.log(i > 0 && j > 0);
-                        x = i * (prev.width + MARGIN);
-                        y = j * (prev.height + MARGIN)
-                        break;
-
-                    case "ROW":
+                        };
+                        x = i * ((this.config.layout == "COLUMN" ? prev.width : prev.height) + MARGIN);
+                        y = j * ((this.config.layout == "COLUMN" ? prev.height : prev.width) + MARGIN);
                         break;
 
                     case "CROSS":
