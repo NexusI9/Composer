@@ -138,7 +138,7 @@ export class VariantOrganiser {
         node.clipsContent = false;
         const { width, height } = node.absoluteRenderBounds || { width: undefined, height: undefined };
         if (width && height) node.resizeWithoutConstraints(width, height);
-        node.clipsContent = initClip;
+        //node.clipsContent = initClip;
     }
 
     destroy() {
@@ -146,7 +146,7 @@ export class VariantOrganiser {
     }
 
 
-    update(set: Partial<ComponentSetNode>, { id, value }: IIndexKeyVal): ITreeConfig {
+    async update(set: Partial<ComponentSetNode>, { id, value }: IIndexKeyVal): Promise<ITreeConfig> {
 
         if (!set.id || !this.activeComponent?.id) return {
             config: [],
@@ -159,59 +159,54 @@ export class VariantOrganiser {
         console.log(tree);
 
         //Arrange component differently depending on layout type
-        const componentCache = this.cache[this.activeComponent.id];
         this.#groupCount = 0;
+        const groups: ComponentCache[][] = [];
         this.traverse<ComponentCache>({
             tree: tree,
-            onLast: async (group, index) => {
-
-                console.log({ group, index });
-                await Promise.all(group.map(async (child, i) => {
-                    const node = await figma.getNodeByIdAsync(child.id);
-                    if (node && node.type == "COMPONENT") {
-
-                        //get previous node height
-                        const prevParallelComponent = i - componentCache.length;
-                        const prev = index.absolute > 0 ?
-                            {
-                                width: this.cache[String(this.activeComponent?.id)][i - 1]?.size.width || 0,
-                                height: this.cache[String(this.activeComponent?.id)][i - 1]?.size.height || 0
-                            }
-                            :
-                            {
-                                width: 0,
-                                height: 0
-                            };
-
-                        let x = child.position.x;
-                        let y = child.position.y;
-
-                        switch (this.config.layout) {
-
-                            case "COLUMN":
-                                x = index.absolute * (prev.width + MARGIN);
-                                y = i * (prev.height + MARGIN)
-                                break;
-
-                            case "ROW":
-                                break;
-
-                            case "CROSS":
-                                break;
-                        }
-
-                        console.log(`${child.name}\t\tx:${x}\ty:${y}`);
-
-                        node.x = x;
-                        node.y = y;
-                    }
-                }));
-
-
-                const componentSet = await figma.getNodeByIdAsync(String(this.activeComponent?.id));
-                if (componentSet && componentSet.type == "COMPONENT_SET") this.resizeFitComponent(componentSet);
-            }
+            onLast: (group, index) => groups.push(group)
         });
+
+        await Promise.all(groups.map(async (gp, i) => await Promise.all(gp.map(async (child, j) => {
+            const node = await figma.getNodeByIdAsync(child.id);
+            if (node && node.type == "COMPONENT") {
+
+                //get previous node max size
+
+                let x = child.position.x;
+                let y = child.position.y;
+
+                switch (this.config.layout) {
+
+                    case "COLUMN":
+                        console.log(`${child.name}`);
+                        const prev = {
+                            width: i > 0 ? groups[i - 1].map(item => item.size.width).reduce((a, b) => Math.max(a, b)) : 0, // get max width of the previous column
+                            height: i > 0 && j > 0 ? groups.map(item => item[j - i]?.size.height).filter(n => !!n).reduce((a, b) => Math.max(a, b)) //If advanced in the grid, refers to previous items in the grid within the same row
+                                : i == 0 && j > 0 ? gp[j - 1].size.height //If first column, simply refers to elements above
+                                    : 0
+                        }
+                        console.log(i > 0 && j > 0);
+                        x = i * (prev.width + MARGIN);
+                        y = j * (prev.height + MARGIN)
+                        break;
+
+                    case "ROW":
+                        break;
+
+                    case "CROSS":
+                        break;
+                }
+
+                console.log(`x:${x}\ty:${y}`);
+
+                node.x = x;
+                node.y = y;
+            }
+        }))));
+
+        const componentSet = await figma.getNodeByIdAsync(String(this.activeComponent?.id));
+        if (componentSet && componentSet.type == "COMPONENT_SET") this.resizeFitComponent(componentSet);
+
 
         return {
             config: this.config.data,
