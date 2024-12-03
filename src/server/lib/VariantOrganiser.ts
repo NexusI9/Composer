@@ -222,7 +222,7 @@ export class VariantOrganiser {
                             groups[v][col] = value[v];
                         }
 
-                    } if (layout == "ROW") {
+                    } else if (layout == "ROW") {
                         groups.push(value);
                     }
 
@@ -233,6 +233,7 @@ export class VariantOrganiser {
                     }
                     col++;
                 };
+                col = 0;
                 row++;
             }
         });
@@ -276,19 +277,14 @@ export class VariantOrganiser {
                     switch (layout) {
 
                         case "COLUMN":
-                            x = i * (prev.width + this.margin);
-                            y = j * (prev.height + this.margin);
-                            break;
-
                         case "ROW":
-                            x = j * (prev.height + this.margin);
-                            y = i * (prev.width + this.margin);
+                            x = j * (maxSize.width + this.margin);
+                            y = i * (maxSize.height + this.margin);
                             break;
 
                         case "CROSS_MONO": // 1 col + 2 row
-                            const prevLength = i > 0 ? offset : 0;
                             x = ((maxSize.width + this.margin) * j) + (Math.floor(i / 2) * (maxSize.width + this.margin));
-                            //y = gp.index.relative * (maxSize.height + this.margin);
+
                             //tidy up programatically the items
 
                             break;
@@ -304,6 +300,7 @@ export class VariantOrganiser {
 
                     }
 
+                    console.log(child.name, x, y);
                     node.x = this.margin + x;
                     node.y = this.margin + y;
 
