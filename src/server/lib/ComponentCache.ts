@@ -11,16 +11,18 @@ export interface IComponentCache {
 
 export class ComponentCache {
 
-    name: string;
-    id: string;
-    preview: string;
+    name: IComponentCache["name"];
+    id: IComponentCache["id"];
+    preview: IComponentCache["preview"];
     position: IComponentCache["position"];
+    size: IComponentCache["size"];
 
-    constructor({ name, id, preview, position }: IComponentCache) {
+    constructor({ name, id, preview, position, size }: IComponentCache) {
         this.name = name;
         this.id = id;
         this.preview = preview;
         this.position = position;
+        this.size = size;
     }
 
     get nameObject() {
