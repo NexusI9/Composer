@@ -181,7 +181,7 @@ export class VariantOrganiser {
                         console.log(`${child.name}`);
                         const prev = {
                             width: i > 0 ? groups[i - 1].map(item => item.size.width).reduce((a, b) => Math.max(a, b)) : 0, // get max width of the previous column
-                            height: i > 0 && j > 0 ? groups.map(item => item[j - i]?.size.height).filter(n => !!n).reduce((a, b) => Math.max(a, b)) //If advanced in the grid, refers to previous items in the grid within the same row
+                            height: i > 0 && j > 0 ? groups.map(item => item[j - 1]?.size.height).filter(n => !!n).reduce((a, b) => Math.max(a, b)) //If advanced in the grid, refers to previous items in the grid within the same row
                                 : i == 0 && j > 0 ? gp[j - 1].size.height //If first column, simply refers to elements above
                                     : 0
                         }
