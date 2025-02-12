@@ -17,8 +17,6 @@ import Preview from "@layouts/Preview/Preview";
 import { Resizer } from "@components/Resizer";
 
 export default () => {
-
-
     return (<Theme
         appearance="dark"
         accentColor="blue"

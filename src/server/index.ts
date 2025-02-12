@@ -18,6 +18,7 @@ function activeComponentFromSelection(selection: readonly SceneNode[]) {
   else organiser.destroy();
 
   figma.ui.postMessage({ action: "UPDATE_ACTIVE_COMPONENT", payload: activeComponent });
+
 }
 
 figma.showUI(__html__, { themeColors: true });
