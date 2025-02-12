@@ -27,6 +27,8 @@ interface IComponentLayout {
   previousLength: number;
 }
 
+type TreeMatrix = (ComponentCache | undefined)[][][];
+
 export class VariantOrganiser {
   cache: { [key: string]: ComponentCache[] } = {};
   config: Configuration<string> = new Configuration(4);
@@ -198,6 +200,45 @@ export class VariantOrganiser {
 
   destroy() {}
 
+  alignMatrix(matrix: TreeMatrix): TreeMatrix {
+    /*
+	1. traverse matrix column by column
+	2. check highest column length
+	3. pad the smaller column by adding undefined value
+    */
+
+    let columnCount = matrix
+      .map((row) => row.length)
+      .reduce((a, b) => Math.max(a, b));
+
+    // get max column length
+    let maxColumnLength: number[] = new Array(columnCount).fill(0);
+    for (let col = 0; col < columnCount; col++) {
+      for (let row in matrix) {
+        maxColumnLength[col] = Math.max(
+          maxColumnLength[col],
+          matrix[row][col].length,
+        );
+      }
+    }
+
+    // add padding
+    for (let row in matrix) {
+      for (let col in matrix[row]) {
+        for (
+          let u = 0;
+          u < maxColumnLength[col] - matrix[row][col].length;
+          u++
+        ) {
+          matrix[row][col].push(undefined);
+        }
+      }
+    }
+
+    console.log({ matrix });
+    return matrix;
+  }
+
   layoutComponent({
     node,
     cache,
@@ -212,13 +253,6 @@ export class VariantOrganiser {
     let y = cache.position.y;
 
     // layout components x and y based on configuration
-    console.log({
-      name: node.name,
-      column,
-      row,
-      index,
-    });
-
     y = row * (maxSize.height + this.margin);
     switch (layout) {
       case "COLUMN":
@@ -227,13 +261,21 @@ export class VariantOrganiser {
         break;
 
       case "CROSS_MONO": // 1 col + 1 row
-        //console.log(`name:${node.name}\ni: ${i}, j:${j}\nx:${x}, y:${y}\n`);
         x =
           index * (maxSize.width + this.margin) +
-          (previousLength * maxSize.width * column +
-            this.columnGap * Math.min(1, column));
-        console.log(`${previousLength}`);
-        //tidy up programatically the items
+          (previousLength * (maxSize.width + this.margin) * column +
+            this.columnGap * column * Math.min(1, column));
+
+        console.log({
+          row,
+          column,
+          index,
+          x,
+          previous_block:
+            previousLength * maxSize.width * column +
+            (this.columnGap + this.margin) * Math.min(1, column),
+        });
+
         break;
 
       case "CROSS_COL": //2 column properties + 1 row
@@ -280,7 +322,7 @@ export class VariantOrganiser {
      * ====== CONTEXT ======
      *
      * Arrange component differently depending on layout type from {Object} => [Table]
-     * { A: B: { [C],[D],[E] }} => [[C],[D],[E]]
+     * { A: B: { [C],[D],[E] }} => [ [C] [D] [E] ]
      * The current process first establishes a tree to segment the different types
      * of components based on filters
      *
@@ -306,7 +348,7 @@ export class VariantOrganiser {
      * */
 
     this.#groupCount = 0;
-    const groups: ComponentCache[][][] = [];
+    const groups: TreeMatrix = [];
     let row = 0;
     let col = 0;
 
@@ -372,7 +414,7 @@ export class VariantOrganiser {
       Object.keys(tree).forEach((key, row_index) => {
         const currentLevel = tree[key];
         // 2 rows cases
-        // TODO: implement
+        // TODO: implement and check if cannot simplify the 1D case to put in it
         if (this.config.rows.length > 1) {
         } else {
           //go through columns (1 k = 1 column)
@@ -398,34 +440,50 @@ export class VariantOrganiser {
     groups.forEach((row) =>
       row.forEach((col) =>
         col.forEach((item) => {
-          maxSize.width = Math.max(maxSize.width, item.size.width);
-          maxSize.height = Math.max(maxSize.height, item.size.height);
+          maxSize.width = Math.max(maxSize.width, item?.size.width || 0);
+          maxSize.height = Math.max(maxSize.height, item?.size.height || 0);
         }),
       ),
     );
 
-    console.log(groups);
+    /* To ensure proper alignment ,we need to add padding to all the uneven columns
+	 For this we simply add undefined value to compensate the padding and will
+	 handle those undefined values consequently during the layout process
+	 
+	 [ [4] [3] [4] ]     [ [4] [3] [8] ] 
+	 [ [3] [2] [8] ] ==> [ [4] [3] [8] ] 
+	 [ [1] [1] [2] ]     [ [4] [3] [8] ]
+	 
+    */
+
+    if (layout !== "ROW" && layout !== "COLUMN") this.alignMatrix(groups);
 
     /* main layout loop:
-	 go through the groups to layout the components depending on they index in the array (row/ col)
-     */
+       go through the groups to layout the components depending
+       on their index in the array (row/ col)
+    */
+
     await Promise.all(
-      groups.map(async (row, i) =>
-        Promise.all(
+      groups.map(async (row, i) => {
+        return Promise.all(
           row.map(async (col, j) =>
             Promise.all(
               col.map(async (child, k) => {
+                if (!child) return;
+
                 const node = await figma.getNodeByIdAsync(child.id);
+
                 if (node && node.type == "COMPONENT") {
                   // set component position
+
                   this.layoutComponent({
                     row: i,
                     column: j,
                     index: k,
                     node: node,
                     cache: child,
-                    maxSize: maxSize,
-                    layout: layout,
+                    maxSize,
+                    layout,
                     previousLength: j > 0 ? row[j - 1].length : 0,
                   });
 
@@ -441,12 +499,12 @@ export class VariantOrganiser {
                       node.y + child.size.height + this.margin,
                     ),
                   };
-                }
-              }),
+                } //if
+              }), //child
             ),
           ),
-        ),
-      ),
+        );
+      }),
     );
 
     this.resizeFitComponent(bounds);
