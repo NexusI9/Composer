@@ -235,7 +235,6 @@ export class VariantOrganiser {
       }
     }
 
-    console.log({ matrix });
     return matrix;
   }
 
@@ -256,35 +255,23 @@ export class VariantOrganiser {
     y = row * (maxSize.height + this.margin);
     switch (layout) {
       case "COLUMN":
-      case "ROW":
         x = column * (maxSize.width + this.margin);
         break;
 
+      case "ROW":
+        x = index * (maxSize.width + this.margin);
+        break;
+
       case "CROSS_MONO": // 1 col + 1 row
-        x =
-          index * (maxSize.width + this.margin) +
-          (previousLength * (maxSize.width + this.margin) * column +
-            this.columnGap * column * Math.min(1, column));
-
-        console.log({
-          row,
-          column,
-          index,
-          x,
-          previous_block:
-            previousLength * maxSize.width * column +
-            (this.columnGap + this.margin) * Math.min(1, column),
-        });
-
-        break;
-
       case "CROSS_COL": //2 column properties + 1 row
-        break;
-
       case "CROSS_ROW": //2 rows properties + 1 col
-        break;
-
       case "CROSS": //2 col + 2 row properties
+        const previousBlockWidth =
+          previousLength * (maxSize.width + this.margin) * column +
+          this.columnGap * column * Math.min(1, column);
+
+        x = index * (maxSize.width + this.margin) + previousBlockWidth;
+
         break;
     }
 
@@ -313,8 +300,12 @@ export class VariantOrganiser {
 
     const { layout } = this.config;
 
-    //Init config is in order [col 1, col 2, row 1, row 2]
-    //We reverse the list order if cross, easier to read "in row" rather than translating columns to row
+    /*
+	Init config is in order [col 1, col 2, row 1, row 2]
+	We reverse the list order if cross, easier to read "in row"
+	rather than translating columns to row
+      */
+
     const tree = this.cache2Tree(!!layout.includes("CROSS"));
     console.log(tree);
 
@@ -352,17 +343,24 @@ export class VariantOrganiser {
     let row = 0;
     let col = 0;
 
-    /*====== OBJECT TO MATRIX ARRANGEMENT ======
+    /*
+	====== OBJECT TO MATRIX ARRANGEMENT ======
 	 
-	Traverse the object and rearrange its content to fit a Row-Major order matrix (multi-dim array) in function of the layout configuration	
-       TODO: Maybe do it directly in parallel of the tree creation so maybe don't even need tree anymore
+	Traverse the object and rearrange its content to fit a Row-Major order matrix
+	(multi-dim array) in function of the layout configuration
+	
+	TODO: Maybe do it directly in parallel of the tree creation
+	so maybe don't even need tree anymore
+	
        =========================================
     */
 
-    /* Handle 1D cases:
-       Basically flatten the tree object
-       And eventually translates the columns into rows
-       */
+    /*
+      Handle 1D cases:
+      Basically flatten the tree object
+      And eventually translates the columns into rows
+    */
+
     if (layout == "COLUMN" || layout == "ROW") {
       this.traverse<ComponentCache>({
         tree,
@@ -398,7 +396,8 @@ export class VariantOrganiser {
         },
       });
     } else {
-      /* Handle 2D cases (i.e. cross):
+      /*
+	  Handle 2D cases (i.e. cross):
 	   Use the object structure to define our columns and row
 	   We separate each row entry into distinct columns
 	   meaning n0 = row, n > 0 = columns:
@@ -428,8 +427,13 @@ export class VariantOrganiser {
     // cache bound box for later component set resizing
     let bounds: Rect = { x: 0, y: 0, width: 0, height: 0 };
 
-    // for CROSS configuration, use a global "max size" instead of a "per row/col max", easier and faster to manage to maintain a grid layout
-    const maxSize = {
+    /*
+	for CROSS configuration, use a global "max size" instead of a
+	"per row/col max", easier and faster to manage
+	to maintain a grid layout
+    */
+
+    let maxSize: Rect = {
       x: 0,
       y: 0,
       width: 0,
@@ -440,13 +444,17 @@ export class VariantOrganiser {
     groups.forEach((row) =>
       row.forEach((col) =>
         col.forEach((item) => {
-          maxSize.width = Math.max(maxSize.width, item?.size.width || 0);
-          maxSize.height = Math.max(maxSize.height, item?.size.height || 0);
+          maxSize = {
+            ...maxSize,
+            width: Math.max(maxSize.width, item?.size.width || 0),
+            height: Math.max(maxSize.height, item?.size.height || 0),
+          };
         }),
       ),
     );
 
-    /* To ensure proper alignment ,we need to add padding to all the uneven columns
+    /*
+	To ensure proper alignment ,we need to add padding to all the uneven columns
 	 For this we simply add undefined value to compensate the padding and will
 	 handle those undefined values consequently during the layout process
 	 
@@ -458,7 +466,8 @@ export class VariantOrganiser {
 
     if (layout !== "ROW" && layout !== "COLUMN") this.alignMatrix(groups);
 
-    /* main layout loop:
+    /*
+	main layout loop:
        go through the groups to layout the components depending
        on their index in the array (row/ col)
     */
@@ -484,7 +493,7 @@ export class VariantOrganiser {
                     cache: child,
                     maxSize,
                     layout,
-                    previousLength: j > 0 ? row[j - 1].length : 0,
+                    previousLength: j > 0 ? row[j - 1]?.length || 0 : 0,
                   });
 
                   //update component set bounds for later resize component
@@ -499,8 +508,8 @@ export class VariantOrganiser {
                       node.y + child.size.height + this.margin,
                     ),
                   };
-                } //if
-              }), //child
+                }
+              }),
             ),
           ),
         );
