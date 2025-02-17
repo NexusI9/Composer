@@ -309,126 +309,123 @@ export class VariantOrganiser {
     const tree = this.cache2Tree(!!layout.includes("CROSS"));
     console.log(tree);
 
-    /**
-     * ====== CONTEXT ======
-     *
-     * Arrange component differently depending on layout type from {Object} => [Table]
-     * { A: B: { [C],[D],[E] }} => [ [C] [D] [E] ]
-     * The current process first establishes a tree to segment the different types
-     * of components based on filters
-     *
-     *
-     * ====== ISSUE ======
-     *
-     * However the issue with this approach is that the output tree
-     * is completely "major order" agnostic.
-     * This is also due to the flexiblity of the plugin that allows
-     * a "column-strict" layout, hence the necessity to store
-     * the components in a "neutral" structure either for rows or columns-strict layout.
-     *
-     * Hence our output tree does not give any hints on how to layout its components,
-     * it simply dispatches them through distinct branches
-     *
-     *
-     * ====== SOLUTION ======
-     *
-     * The goal of the below method will be to transform the tree into
-     * a ROW-Major order matrix, so we shall reduce it's translation to table
-     * and the different approaches to lay out the components.
-     *
-     * */
+    /*
+     ====== CONTEXT ======
+   
+     Arrange component differently depending on layout type from {Object} => [Table]
+     { A: B: { [C],[D],[E] }} => [ [C] [D] [E] ]
+     The current process first establishes a tree to segment the different types
+     of components based on filters
+          
+     ====== ISSUE ======
+     
+     However the issue with this approach is that the output tree
+     is completely "major order" agnostic.
+     This is also due to the flexiblity of the plugin that allows
+     a "column-only" or "row-only" layout, hence the necessity to store
+     the components in a "neutral" structure either for rows or columns-only layout.
+     
+     Hence our output tree does not give any hints on how to layout its components,
+     it simply dispatches them through distinct branches
+
+     
+      ====== SOLUTION ======
+     
+     The goal of the below method will be to transform the tree into
+     a ROW-Major order matrix, so we shall reduce it's translation to table
+     and the different approaches to lay out the components.
+     
+ 
+     ====== OBJECT TO MATRIX ARRANGEMENT ======
+
+     Traverse the object and rearrange its content to fit a Row-Major order matrix
+     (multi-dim array) in function of the layout configuration
+     
+     >> Handle 1D cases:
+     Basically flatten the tree object
+     And eventually translates the columns into rows
+     
+     >> Handle 2D cases (i.e. cross):
+     Use the object structure to define our columns and row
+     We separate each row entry into distinct columns
+     meaning n0 = row, n > 0 = columns:
+     row 1 [ [col 1] [col 2] ],
+     row 2 [ [col 1] [col 2] ]
+     
+     Note: for consistency sake the ROW or COL (1D) layout will be the following
+     row 1 [ [col 1] ]
+     row 2 [ [col 2] ]
+     ...
+     
+     TODO: Maybe do it directly in parallel of the tree creation
+     so maybe don't even need tree anymore
+     
+     =========================================
+    */
 
     this.#groupCount = 0;
     const groups: TreeMatrix = [];
-    let row = 0;
     let col = 0;
 
-    /*
-	====== OBJECT TO MATRIX ARRANGEMENT ======
-	 
-	Traverse the object and rearrange its content to fit a Row-Major order matrix
-	(multi-dim array) in function of the layout configuration
-	
-	TODO: Maybe do it directly in parallel of the tree creation
-	so maybe don't even need tree anymore
-	
-       =========================================
-    */
+    Object.keys(tree).forEach((key, row_index) => {
+      const currentLevel = tree[key];
 
-    /*
-      Handle 1D cases:
-      Basically flatten the tree object
-      And eventually translates the columns into rows
-    */
+      switch (layout) {
+        case "ROW":
+          /*
+	    Rows are already "row-ordered" so don't need any translation
+	    Simply encapsulate it into a sub-array to fit convention
+	    */
 
-    if (layout == "COLUMN" || layout == "ROW") {
-      this.traverse<ComponentCache>({
-        tree,
-        onBeforeLast: (tree) => {
-          for (const key in tree) {
-            const value = tree[key as keyof typeof tree] as any;
+          groups.push([currentLevel]);
+          break;
 
-            if (layout == "COLUMN") {
-              /*
-		  Columns requires translation
-		For [[A1,A2,A3],[B1,B2,B3],[C1,C2,C3]] :
-		  [
-		  [A1,B1,C1],
-		  [A2,B2,C2],
-		  [A3,B3,C3]
-		  ]
-	      */
-              for (let v = 0; v < value.length; v++) {
-                if (!groups[v]) groups[v] = [];
-                groups[v][col] = [value[v]];
+        case "COLUMN":
+          /*
+	    Columns requires translation
+	    For [[A1,A2,A3],[B1,B2,B3],[C1,C2,C3]] :
+	    [
+	     [A1,B1,C1],
+	     [A2,B2,C2],
+	     [A3,B3,C3]
+	    ]
+	    */
+
+          this.traverse<ComponentCache>({
+            tree: currentLevel,
+            onBeforeLast: (tree) => {
+              for (let row in tree as ComponentCache[]) {
+                const componentList = tree[row as keyof typeof tree] as any;
+                if (!groups[row]) groups[row] = [];
+                groups[row][col] = [componentList];
               }
-            } else if (layout == "ROW") {
-              /*
-		  Rows are already "row-ordered" so don't need any translation
-		  Simply encapsulate it into a sub-array to fit convention
-		*/
-              groups.push([value]);
-            }
-            col++;
-          }
-          col = 0;
-          row++;
-        },
-      });
-    } else {
-      /*
-	  Handle 2D cases (i.e. cross):
-	   Use the object structure to define our columns and row
-	   We separate each row entry into distinct columns
-	   meaning n0 = row, n > 0 = columns:
-	   row 1 [ [col 1] [col 2] ],
-	   row 2 [ [col 1] [col 2] ]
+              col++;
+            },
+          });
+          break;
 
-	   Note: for consistency sake the ROW or COL (1D) layout will be the following
-	   row 1 [ [col 1] ]
-	   row 2 [ [col 2] ]
-	   ...
-      */
-
-      Object.keys(tree).forEach((key, row_index) => {
-        const currentLevel = tree[key];
-        // 2 rows cases
-        // TODO: implement and check if cannot simplify the 1D case to put in it
-        if (this.config.rows.length > 1) {
-        } else {
-          //go through columns (1 k = 1 column)
+        case "CROSS_MONO":
           Object.keys(currentLevel).forEach((k) => {
+            //go through columns (1 sub key (k) = 1 column)
             groups[row_index] = [...(groups[row_index] || []), currentLevel[k]];
           });
-        }
-      });
-    }
+          break;
+      }
+    });
+
+    console.log(groups);
+
+    return {
+      config: this.config.data,
+      tree,
+    };
+      
 
     // cache bound box for later component set resizing
     let bounds: Rect = { x: 0, y: 0, width: 0, height: 0 };
 
     /*
-	for CROSS configuration, use a global "max size" instead of a
+	use a global "max size" instead of a
 	"per row/col max", easier and faster to manage
 	to maintain a grid layout
     */
@@ -440,7 +437,7 @@ export class VariantOrganiser {
       height: 0,
     };
 
-    // assign greatest value
+    // assign greatest value to max size
     groups.forEach((row) =>
       row.forEach((col) =>
         col.forEach((item) => {
@@ -467,15 +464,15 @@ export class VariantOrganiser {
     if (layout !== "ROW" && layout !== "COLUMN") this.alignMatrix(groups);
 
     /*
-	main layout loop:
-       go through the groups to layout the components depending
-       on their index in the array (row/ col)
+      main layout loop:
+      go through the groups to layout the components depending
+      on their index in the array (row/ col)
     */
 
     await Promise.all(
-      groups.map(async (row, i) => {
+      groups.map(async (row, r) => {
         return Promise.all(
-          row.map(async (col, j) =>
+          row.map(async (col, c) =>
             Promise.all(
               col.map(async (child, k) => {
                 if (!child) return;
@@ -486,14 +483,14 @@ export class VariantOrganiser {
                   // set component position
 
                   this.layoutComponent({
-                    row: i,
-                    column: j,
+                    row: r,
+                    column: c,
                     index: k,
                     node: node,
                     cache: child,
                     maxSize,
                     layout,
-                    previousLength: j > 0 ? row[j - 1]?.length || 0 : 0,
+                    previousLength: c > 0 ? row[c - 1]?.length || 0 : 0,
                   });
 
                   //update component set bounds for later resize component
