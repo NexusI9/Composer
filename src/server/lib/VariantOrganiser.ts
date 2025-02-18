@@ -71,14 +71,15 @@ export class VariantOrganiser {
     onBeforeLast,
     level = 0,
     index = { relative: 0, absolute: 0 },
+    length = this.config.filter().length,
   }: {
     tree: T[];
     onLast?: (group: T[], index: IIndex) => any;
     onBeforeLast?: (tree: Object, index: IIndex) => any;
     readonly level?: number;
     readonly index?: IIndex;
+    length?: number;
   }) {
-    const length = this.config.filter().length;
     //check if last level
     if (level == length) {
       this.#groupCount++;
@@ -88,6 +89,7 @@ export class VariantOrganiser {
         onBeforeLast &&
         ((length > 1 && level == length - 1) || length == 1)
       ) {
+        console.log({ tree });
         onBeforeLast(tree, index);
       }
       level++;
@@ -98,6 +100,7 @@ export class VariantOrganiser {
           onBeforeLast,
           level: level,
           index: { relative: i, absolute: this.#groupCount },
+          length,
         }),
       );
     }
@@ -262,12 +265,15 @@ export class VariantOrganiser {
   }: IComponentLayout) {
     let x = cache.position.x;
     let y = cache.position.y;
-
+    const previousBlockWidth =
+      previousLength * (maxSize.width + this.margin) * column +
+	  this.columnGap * column * Math.min(1, column);
+      
     // layout components x and y based on configuration
     y = row * (maxSize.height + this.margin);
     switch (layout) {
       case "COLUMN":
-        x = column * (maxSize.width + this.margin);
+        x = index * (maxSize.width + this.margin) + previousBlockWidth;
         break;
 
       case "ROW":
@@ -278,10 +284,6 @@ export class VariantOrganiser {
       case "CROSS_COL": //2 column properties + 1 row
       case "CROSS_ROW": //2 rows properties + 1 col
       case "CROSS": //2 col + 2 row properties
-        const previousBlockWidth =
-          previousLength * (maxSize.width + this.margin) * column +
-          this.columnGap * column * Math.min(1, column);
-
         x = index * (maxSize.width + this.margin) + previousBlockWidth;
 
         break;
@@ -310,26 +312,17 @@ export class VariantOrganiser {
       tree: source,
       onBeforeLast: (comps) => {
         // receive array as comps
+        console.log({ comps });
         if (Array.isArray(comps)) {
           for (row = 0; row < (comps as ComponentCache[]).length; row++) {
-            const componentList = comps[row as keyof typeof comps] as any;
+            const componentList = comps[row as keyof typeof comps];
             if (!destination[row]) destination[row] = [];
-            destination[row][columnTracker.column] = [componentList];
-          }
-          columnTracker.column++;
-        } else {
-          // receive solo comp
-          console.log({ ...columnTracker, row });
-          if (comps) {
-            // create new row if doesn't exists yet
-            if (!destination[row]) destination[row] = [];
-
-            // append new (solo) component to current row
             destination[row][columnTracker.column] = [
               ...(destination[row][columnTracker.column] || []),
-              comps as ComponentCache,
+              componentList,
             ];
           }
+          columnTracker.column++;
         }
       },
     });
@@ -448,7 +441,6 @@ export class VariantOrganiser {
           /*
 	    Columns requires translation
 	  */
-          console.log(currentLevel);
           this.translateColumns(currentLevel, groups[0], columnTracker);
           break;
 
@@ -463,34 +455,29 @@ export class VariantOrganiser {
           break;
 
         case "CROSS_COL":
-          //treat row per row
-          Object.keys(currentLevel).forEach((k) => {
-            const currentColumn = currentLevel[k];
-            this.translateColumns(
-              currentColumn,
-              groups[0],
-              columnTracker,
-              rowIndex,
-            );
-            columnTracker.column++;
-          });
+          this.translateColumns(
+            currentLevel,
+            groups[rowIndex],
+            columnTracker,
+            rowIndex,
+          );
 
-          columnTracker.column = 0;
           break;
 
         case "CROSS_ROW":
         case "CROSS":
-          //treat row per row
-          /*const subgroupCR: ComponentCache[][][] = [];
-          Object.keys(currentLevel).forEach((k) => {
-            const currentColumn = currentLevel[k];
-            this.translateColumns(currentColumn, subgroupCR, columnTracker);
-          });
-          console.log({ key, subgroupCR });
-          groups[0].push(...subgroupCR);
-          columnTracker.column = 0;*/
+          console.log(rowIndex + " ----------");
+
+          this.translateColumns(
+            currentLevel,
+            groups[rowIndex],
+            columnTracker,
+            rowIndex,
+          );
+
           break;
       }
+      columnTracker.column = 0;
     });
 
     console.log(layout);
@@ -571,7 +558,7 @@ export class VariantOrganiser {
 
                     if (node && node.type == "COMPONENT") {
                       // set component position
-
+                      console.log({ row: r, column: c, index: k });
                       this.layoutComponent({
                         row: r,
                         column: c,
