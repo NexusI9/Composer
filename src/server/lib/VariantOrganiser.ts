@@ -89,7 +89,6 @@ export class VariantOrganiser {
         onBeforeLast &&
         ((length > 1 && level == length - 1) || length == 1)
       ) {
-        console.log({ tree });
         onBeforeLast(tree, index);
       }
       level++;
@@ -267,8 +266,8 @@ export class VariantOrganiser {
     let y = cache.position.y;
     const previousBlockWidth =
       previousLength * (maxSize.width + this.margin) * column +
-	  this.columnGap * column * Math.min(1, column);
-      
+      this.columnGap * column * Math.min(1, column);
+
     // layout components x and y based on configuration
     y = row * (maxSize.height + this.margin);
     switch (layout) {
@@ -277,7 +276,7 @@ export class VariantOrganiser {
         break;
 
       case "ROW":
-        x = index * (maxSize.width + this.margin);
+        x = row * (maxSize.width + this.margin);
         break;
 
       case "CROSS_MONO": // 1 col + 1 row
@@ -294,12 +293,19 @@ export class VariantOrganiser {
     node.y = this.margin + y;
   }
 
-  translateColumns(
-    source: ComponentCache[],
-    destination: (ComponentCache | undefined)[][][],
-    columnTracker: IColumnTracker,
-    row: number = 0,
-  ) {
+  translateColumns({
+    source,
+    destination,
+    columnTracker,
+    row,
+    columnIncrementType = "INCREMENT_PER_ITEM",
+  }: {
+    source: ComponentCache[];
+    destination: (ComponentCache | undefined)[][][];
+    columnTracker: IColumnTracker;
+    row?: number;
+    columnIncrementType?: "INCREMENT_PER_ITEM" | "INCREMENT_PER_ROW";
+  }) {
     /*
 	                                       [
 	                                        [A1,B1,C1],
@@ -312,20 +318,27 @@ export class VariantOrganiser {
       tree: source,
       onBeforeLast: (comps) => {
         // receive array as comps
-        console.log({ comps });
         if (Array.isArray(comps)) {
-          for (row = 0; row < (comps as ComponentCache[]).length; row++) {
-            const componentList = comps[row as keyof typeof comps];
-            if (!destination[row]) destination[row] = [];
-            destination[row][columnTracker.column] = [
-              ...(destination[row][columnTracker.column] || []),
-              componentList,
+          for (let r = 0; r < (comps as ComponentCache[]).length; r++) {
+            const component = comps[r as keyof typeof comps];
+            //if argument row is provided, use it instead of the for loop index
+            const realRow = row !== undefined ? row : r;
+
+            console.log(realRow, columnTracker.column, component);
+
+            if (!destination[realRow]) destination[realRow] = [];
+            destination[realRow][columnTracker.column] = [
+              ...(destination[realRow][columnTracker.column] || []),
+              component,
             ];
           }
-          columnTracker.column++;
+          if (columnIncrementType == "INCREMENT_PER_ITEM")
+            columnTracker.column++;
         }
       },
     });
+
+    if (columnIncrementType == "INCREMENT_PER_ROW") columnTracker.column++;
   }
 
   async update(
@@ -441,7 +454,11 @@ export class VariantOrganiser {
           /*
 	    Columns requires translation
 	  */
-          this.translateColumns(currentLevel, groups[0], columnTracker);
+          this.translateColumns({
+            source: currentLevel,
+            destination: groups[0],
+            columnTracker,
+          });
           break;
 
         case "CROSS_MONO":
@@ -455,25 +472,26 @@ export class VariantOrganiser {
           break;
 
         case "CROSS_COL":
-          this.translateColumns(
-            currentLevel,
-            groups[rowIndex],
+          console.log(rowIndex + " ----------");
+          this.translateColumns({
+            source: currentLevel,
+            destination: groups[0],
             columnTracker,
-            rowIndex,
-          );
+            row: rowIndex,
+            columnIncrementType: "INCREMENT_PER_ROW",
+          });
 
           break;
 
         case "CROSS_ROW":
         case "CROSS":
-          console.log(rowIndex + " ----------");
-
-          this.translateColumns(
-            currentLevel,
-            groups[rowIndex],
+          this.translateColumns({
+            source: currentLevel,
+            destination: groups[rowIndex],
             columnTracker,
-            rowIndex,
-          );
+            row: rowIndex,
+            columnIncrementType: "INCREMENT_PER_ROW",
+          });
 
           break;
       }
