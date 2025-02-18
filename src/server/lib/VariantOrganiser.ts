@@ -27,7 +27,11 @@ interface IComponentLayout {
   previousLength: number;
 }
 
-type TreeMatrix = (ComponentCache | undefined)[][][];
+interface IColumnTracker {
+  column: number;
+}
+
+type TreeMatrix = (ComponentCache | undefined)[][][][];
 
 export class VariantOrganiser {
   cache: { [key: string]: ComponentCache[] } = {};
@@ -75,14 +79,17 @@ export class VariantOrganiser {
     readonly index?: IIndex;
   }) {
     const length = this.config.filter().length;
-
     //check if last level
     if (level == length) {
       this.#groupCount++;
       if (onLast) onLast(tree, index);
     } else {
-      if (onBeforeLast && ((length > 1 && level == length - 1) || length == 1))
+      if (
+        onBeforeLast &&
+        ((length > 1 && level == length - 1) || length == 1)
+      ) {
         onBeforeLast(tree, index);
+      }
       level++;
       Object.keys(tree).forEach((key, i) =>
         this.traverse({
@@ -207,33 +214,38 @@ export class VariantOrganiser {
 	3. pad the smaller column by adding undefined value
     */
 
-    let columnCount = matrix
-      .map((row) => row.length)
-      .reduce((a, b) => Math.max(a, b));
+    matrix.forEach((mainRow, mainRowIndex) => {
+      let columnCount = mainRow
+        .map((row) => row.length)
+        .reduce((a, b) => Math.max(a, b));
 
-    // get max column length
-    let maxColumnLength: number[] = new Array(columnCount).fill(0);
-    for (let col = 0; col < columnCount; col++) {
-      for (let row in matrix) {
-        maxColumnLength[col] = Math.max(
-          maxColumnLength[col],
-          matrix[row][col].length,
-        );
-      }
-    }
+      // get max column length
+      let maxColumnLength: number[] = new Array(columnCount).fill(0);
 
-    // add padding
-    for (let row in matrix) {
-      for (let col in matrix[row]) {
-        for (
-          let u = 0;
-          u < maxColumnLength[col] - matrix[row][col].length;
-          u++
-        ) {
-          matrix[row][col].push(undefined);
+      for (let col = 0; col < columnCount; col++) {
+        for (let row = 0; row < matrix[mainRowIndex].length; row++) {
+          maxColumnLength[col] = Math.max(
+            maxColumnLength[col],
+            matrix[mainRowIndex][row][col]?.length || 0,
+          );
         }
       }
-    }
+
+      // add padding
+      for (let row in matrix) {
+        for (let col in matrix[row]) {
+          for (
+            let u = 0;
+            u < maxColumnLength[col] - matrix[mainRowIndex][row][col].length;
+            u++
+          ) {
+            matrix[mainRowIndex][row][col].push(undefined);
+          }
+        }
+      }
+
+      console.log({ matrix, maxColumnLength });
+    });
 
     return matrix;
   }
@@ -278,6 +290,49 @@ export class VariantOrganiser {
     // assign position
     node.x = this.margin + x;
     node.y = this.margin + y;
+  }
+
+  translateColumns(
+    source: ComponentCache[],
+    destination: (ComponentCache | undefined)[][][],
+    columnTracker: IColumnTracker,
+    row: number = 0,
+  ) {
+    /*
+	                                       [
+	                                        [A1,B1,C1],
+     [[A1,A2,A3],[B1,B2,B3],[C1,C2,C3]]  ===>   [A2,B2,C2],
+	                                        [A3,B3,C3]
+	                                       ]
+*/
+
+    this.traverse<ComponentCache>({
+      tree: source,
+      onBeforeLast: (comps) => {
+        // receive array as comps
+        if (Array.isArray(comps)) {
+          for (row = 0; row < (comps as ComponentCache[]).length; row++) {
+            const componentList = comps[row as keyof typeof comps] as any;
+            if (!destination[row]) destination[row] = [];
+            destination[row][columnTracker.column] = [componentList];
+          }
+          columnTracker.column++;
+        } else {
+          // receive solo comp
+          console.log({ ...columnTracker, row });
+          if (comps) {
+            // create new row if doesn't exists yet
+            if (!destination[row]) destination[row] = [];
+
+            // append new (solo) component to current row
+            destination[row][columnTracker.column] = [
+              ...(destination[row][columnTracker.column] || []),
+              comps as ComponentCache,
+            ];
+          }
+        }
+      },
+    });
   }
 
   async update(
@@ -364,10 +419,19 @@ export class VariantOrganiser {
     */
 
     this.#groupCount = 0;
-    const groups: TreeMatrix = [];
-    let col = 0;
 
-    Object.keys(tree).forEach((key, row_index) => {
+    /*
+	Store in object instead of separate variables cause JS can't pass int pimitives as reference
+	And we need to keep track of the column.
+	TODO: maybe find a better way to track the column.
+    */
+
+    const groups: TreeMatrix = [[], []];
+    const columnTracker: IColumnTracker = {
+      column: 0,
+    };
+
+    Object.keys(tree).forEach((key, rowIndex) => {
       const currentLevel = tree[key];
 
       switch (layout) {
@@ -377,49 +441,65 @@ export class VariantOrganiser {
 	    Simply encapsulate it into a sub-array to fit convention
 	    */
 
-          groups.push([currentLevel]);
+          groups[0].push([currentLevel]);
           break;
 
         case "COLUMN":
           /*
 	    Columns requires translation
-	    For [[A1,A2,A3],[B1,B2,B3],[C1,C2,C3]] :
-	    [
-	     [A1,B1,C1],
-	     [A2,B2,C2],
-	     [A3,B3,C3]
-	    ]
-	    */
-
-          this.traverse<ComponentCache>({
-            tree: currentLevel,
-            onBeforeLast: (tree) => {
-              for (let row in tree as ComponentCache[]) {
-                const componentList = tree[row as keyof typeof tree] as any;
-                if (!groups[row]) groups[row] = [];
-                groups[row][col] = [componentList];
-              }
-              col++;
-            },
-          });
+	  */
+          console.log(currentLevel);
+          this.translateColumns(currentLevel, groups[0], columnTracker);
           break;
 
         case "CROSS_MONO":
           Object.keys(currentLevel).forEach((k) => {
             //go through columns (1 sub key (k) = 1 column)
-            groups[row_index] = [...(groups[row_index] || []), currentLevel[k]];
+            groups[0][rowIndex] = [
+              ...(groups[0][rowIndex] || []),
+              currentLevel[k],
+            ];
           });
+          break;
+
+        case "CROSS_COL":
+          //treat row per row
+          Object.keys(currentLevel).forEach((k) => {
+            const currentColumn = currentLevel[k];
+            this.translateColumns(
+              currentColumn,
+              groups[0],
+              columnTracker,
+              rowIndex,
+            );
+            columnTracker.column++;
+          });
+
+          columnTracker.column = 0;
+          break;
+
+        case "CROSS_ROW":
+        case "CROSS":
+          //treat row per row
+          /*const subgroupCR: ComponentCache[][][] = [];
+          Object.keys(currentLevel).forEach((k) => {
+            const currentColumn = currentLevel[k];
+            this.translateColumns(currentColumn, subgroupCR, columnTracker);
+          });
+          console.log({ key, subgroupCR });
+          groups[0].push(...subgroupCR);
+          columnTracker.column = 0;*/
           break;
       }
     });
 
-    console.log(groups);
+    console.log(layout);
+    console.log("groups =>", groups);
 
-    return {
+    /*return {
       config: this.config.data,
       tree,
-    };
-      
+    };*/
 
     // cache bound box for later component set resizing
     let bounds: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -438,15 +518,17 @@ export class VariantOrganiser {
     };
 
     // assign greatest value to max size
-    groups.forEach((row) =>
-      row.forEach((col) =>
-        col.forEach((item) => {
-          maxSize = {
-            ...maxSize,
-            width: Math.max(maxSize.width, item?.size.width || 0),
-            height: Math.max(maxSize.height, item?.size.height || 0),
-          };
-        }),
+    groups.forEach((mainRow) =>
+      mainRow.forEach((row) =>
+        row.forEach((col) =>
+          col.forEach((item) => {
+            maxSize = {
+              ...maxSize,
+              width: Math.max(maxSize.width, item?.size.width || 0),
+              height: Math.max(maxSize.height, item?.size.height || 0),
+            };
+          }),
+        ),
       ),
     );
 
@@ -461,7 +543,12 @@ export class VariantOrganiser {
 	 
     */
 
-    if (layout !== "ROW" && layout !== "COLUMN") this.alignMatrix(groups);
+    //if (layout !== "ROW" && layout !== "COLUMN") this.alignMatrix(groups);
+
+    /*return {
+      config: this.config.data,
+      tree,
+      };*/
 
     /*
       main layout loop:
@@ -469,48 +556,53 @@ export class VariantOrganiser {
       on their index in the array (row/ col)
     */
 
+    //TODO: improve readability
     await Promise.all(
-      groups.map(async (row, r) => {
-        return Promise.all(
-          row.map(async (col, c) =>
-            Promise.all(
-              col.map(async (child, k) => {
-                if (!child) return;
+      groups.map(async (mainRow) =>
+        Promise.all(
+          mainRow.map(async (row, r) => {
+            return Promise.all(
+              row.map(async (col, c) =>
+                Promise.all(
+                  col.map(async (child, k) => {
+                    if (!child) return;
 
-                const node = await figma.getNodeByIdAsync(child.id);
+                    const node = await figma.getNodeByIdAsync(child.id);
 
-                if (node && node.type == "COMPONENT") {
-                  // set component position
+                    if (node && node.type == "COMPONENT") {
+                      // set component position
 
-                  this.layoutComponent({
-                    row: r,
-                    column: c,
-                    index: k,
-                    node: node,
-                    cache: child,
-                    maxSize,
-                    layout,
-                    previousLength: c > 0 ? row[c - 1]?.length || 0 : 0,
-                  });
+                      this.layoutComponent({
+                        row: r,
+                        column: c,
+                        index: k,
+                        node: node,
+                        cache: child,
+                        maxSize,
+                        layout,
+                        previousLength: c > 0 ? row[c - 1]?.length || 0 : 0,
+                      });
 
-                  //update component set bounds for later resize component
-                  bounds = {
-                    ...bounds,
-                    width: Math.max(
-                      bounds.width,
-                      node.x + child.size.width + this.margin,
-                    ),
-                    height: Math.max(
-                      bounds.height,
-                      node.y + child.size.height + this.margin,
-                    ),
-                  };
-                }
-              }),
-            ),
-          ),
-        );
-      }),
+                      //update component set bounds for later resize component
+                      bounds = {
+                        ...bounds,
+                        width: Math.max(
+                          bounds.width,
+                          node.x + child.size.width + this.margin,
+                        ),
+                        height: Math.max(
+                          bounds.height,
+                          node.y + child.size.height + this.margin,
+                        ),
+                      };
+                    }
+                  }),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
     );
 
     this.resizeFitComponent(bounds);
