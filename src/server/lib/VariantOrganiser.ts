@@ -613,6 +613,7 @@ mainRow    row	| i i i i |	| i i i i |
 
                     const node = await figma.getNodeByIdAsync(child.id);
                     if (node && node.type == "COMPONENT") {
+                      console.log(mainRow);
                       // set component position
                       this.layoutComponent({
                         mainRow: mr,
@@ -625,7 +626,7 @@ mainRow    row	| i i i i |	| i i i i |
                         layout,
                         previousLength: {
                           width: row[c - 1]?.length || 0,
-                          height: mainRow[mr - 1]?.length || 0,
+                          height: groups[mr - 1]?.length || 0,
                         },
                       });
 
