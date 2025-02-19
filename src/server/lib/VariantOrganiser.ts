@@ -228,9 +228,8 @@ export class VariantOrganiser {
       // get max column length
       let maxColumnLength: number[] = new Array(columnCount).fill(0);
 
-      for (let col = 0; col < columnCount; col++) {
-        for (let row = 0; row < mainRow.length; row++) {
-          console.log(mainRow[row][col]);
+      for (let row = 0; row < mainRow.length; row++) {
+        for (let col = 0; col < columnCount; col++) {
           maxColumnLength[col] = Math.max(
             maxColumnLength[col],
             mainRow[row][col]?.length || 0,
@@ -242,22 +241,26 @@ export class VariantOrganiser {
       for (let row in mainRow) {
         for (let col = 0; col < mainRow[row].length; col++) {
           //cannot use in cause "in" skip undefined
-          if (mainRow[row][col] == undefined) {
-            mainRow[row][col] = [];
+          if (mainRow[row][col] == undefined) mainRow[row][col] = [];
 
-            for (
-              let u = 0;
-              u < maxColumnLength[col] - mainRow[row][col].length;
-              u++
-            ) {
-              console.log({ u });
-              mainRow[row][col].push(undefined);
-            }
+          for (
+            let u = 0;
+            u < maxColumnLength[col] - mainRow[row][col].length;
+            u++
+          ) {
+            console.log({ u });
+            mainRow[row][col].push(undefined);
+          }
+
+          if (maxColumnLength[col] !== mainRow[row][col].length) {
+            //TODO: check why JS doesn't add more that 2 undefined in the list
+            // Check "Sparse Array"
+            // Need to manually add new undefined
+
+            mainRow[row][col].push(undefined);
           }
         }
       }
-
-      console.log({ matrix, maxColumnLength });
     });
 
     return matrix;
