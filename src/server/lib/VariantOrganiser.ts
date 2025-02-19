@@ -216,33 +216,43 @@ export class VariantOrganiser {
 	2. check highest column length
 	3. pad the smaller column by adding undefined value
     */
+    console.log("Align matrix");
 
-    matrix.forEach((mainRow, mainRowIndex) => {
+    matrix.forEach((mainRow) => {
+      if (!!!mainRow.length) return;
+
       let columnCount = mainRow
-        .map((row) => row.length)
+        .map((row) => row?.length || 0)
         .reduce((a, b) => Math.max(a, b));
 
       // get max column length
       let maxColumnLength: number[] = new Array(columnCount).fill(0);
 
       for (let col = 0; col < columnCount; col++) {
-        for (let row = 0; row < matrix[mainRowIndex].length; row++) {
+        for (let row = 0; row < mainRow.length; row++) {
+          console.log(mainRow[row][col]);
           maxColumnLength[col] = Math.max(
             maxColumnLength[col],
-            matrix[mainRowIndex][row][col]?.length || 0,
+            mainRow[row][col]?.length || 0,
           );
         }
       }
 
       // add padding
-      for (let row in matrix) {
-        for (let col in matrix[row]) {
-          for (
-            let u = 0;
-            u < maxColumnLength[col] - matrix[mainRowIndex][row][col].length;
-            u++
-          ) {
-            matrix[mainRowIndex][row][col].push(undefined);
+      for (let row in mainRow) {
+        for (let col = 0; col < mainRow[row].length; col++) {
+          //cannot use in cause "in" skip undefined
+          if (mainRow[row][col] == undefined) {
+            mainRow[row][col] = [];
+
+            for (
+              let u = 0;
+              u < maxColumnLength[col] - mainRow[row][col].length;
+              u++
+            ) {
+              console.log({ u });
+              mainRow[row][col].push(undefined);
+            }
           }
         }
       }
@@ -297,14 +307,6 @@ mainRow    row	| i i i i |	| i i i i |
 
     // layout components x and y based on configuration
     y = row * (maxSize.height + this.margin) + previousBlock.height;
-
-    console.log(node.name, {
-      mainRow,
-      row,
-      y,
-      previousBlock: previousBlock.height,
-      previousLength: previousLength.height,
-    });
 
     switch (layout) {
       case "COLUMN":
@@ -537,13 +539,7 @@ mainRow    row	| i i i i |	| i i i i |
       columnTracker.column = 0;
     });
 
-    console.log(layout);
     console.log("groups =>", groups);
-
-    /*return {
-      config: this.config.data,
-      tree,
-    };*/
 
     // cache bound box for later component set resizing
     let bounds: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -587,12 +583,7 @@ mainRow    row	| i i i i |	| i i i i |
 	 
     */
 
-    //if (layout !== "ROW" && layout !== "COLUMN") this.alignMatrix(groups);
-
-    /*return {
-      config: this.config.data,
-      tree,
-      };*/
+    this.alignMatrix(groups);
 
     /*
       main layout loop:
@@ -613,7 +604,6 @@ mainRow    row	| i i i i |	| i i i i |
 
                     const node = await figma.getNodeByIdAsync(child.id);
                     if (node && node.type == "COMPONENT") {
-                      console.log(mainRow);
                       // set component position
                       this.layoutComponent({
                         mainRow: mr,
