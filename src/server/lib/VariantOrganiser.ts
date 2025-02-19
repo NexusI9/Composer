@@ -289,12 +289,22 @@ mainRow    row	| i i i i |	| i i i i |
     const previousBlock = {
       width:
         previousLength.width * (maxSize.width + this.margin) * column +
-        this.columnGap * column * Math.min(1, column),
-      height: this.columnGap * mainRow * Math.min(1, mainRow),
+        this.columnGap * (column * Math.min(1, column)),
+      height:
+        previousLength.height * (maxSize.height + this.margin) * mainRow +
+        this.columnGap * (mainRow * Math.min(1, mainRow)),
     };
 
     // layout components x and y based on configuration
     y = row * (maxSize.height + this.margin) + previousBlock.height;
+
+    console.log(node.name, {
+      mainRow,
+      row,
+      y,
+      previousBlock: previousBlock.height,
+      previousLength: previousLength.height,
+    });
 
     switch (layout) {
       case "COLUMN":
@@ -317,16 +327,6 @@ mainRow    row	| i i i i |	| i i i i |
     // assign position
     node.x = this.margin + x;
     node.y = this.margin + y;
-
-    return;
-    console.log({
-      mainRow,
-      row,
-      column,
-      index,
-      y,
-      name: node.name,
-    });
   }
 
   translateColumns({
@@ -335,14 +335,14 @@ mainRow    row	| i i i i |	| i i i i |
     columnTracker,
     row,
     splitOnLevel,
-    columnIncrementType = "INCREMENT_PER_ITEM",
+    traverseLength,
   }: {
     source: ComponentCache[];
     destination: (ComponentCache | undefined)[][][];
     columnTracker: IColumnTracker;
     row?: number;
-    columnIncrementType?: "INCREMENT_PER_ITEM" | "INCREMENT_PER_ROW";
     splitOnLevel: number;
+    traverseLength?: number;
   }) {
     /*
 	                                       [
@@ -354,16 +354,14 @@ mainRow    row	| i i i i |	| i i i i |
 
     this.traverse<ComponentCache>({
       tree: source,
-      onBeforeLast: (comps, index, level) => {
-        console.log({ comps, index, level });
+      ...(traverseLength && { length: traverseLength }),
+      onBeforeLast: (comps, index) => {
         // receive array as comps
         if (Array.isArray(comps)) {
           for (let r = 0; r < (comps as ComponentCache[]).length; r++) {
             const component = comps[r as keyof typeof comps];
             //if argument row is provided, use it instead of the for loop index
             const realRow = row !== undefined ? row : r;
-
-            console.log(realRow, columnTracker.column, component);
 
             if (!destination[realRow]) destination[realRow] = [];
             destination[realRow][columnTracker.column] = [
@@ -521,16 +519,15 @@ mainRow    row	| i i i i |	| i i i i |
 
         case "CROSS_ROW":
         case "CROSS":
-          console.log(rowIndex + " ----------");
           Object.keys(currentLevel).forEach((key, subRowIndex) => {
-            console.log(key, subRowIndex);
             //get sub row index
             this.translateColumns({
-              source: currentLevel,
+              source: currentLevel[key],
               destination: groups[rowIndex],
               columnTracker,
               row: subRowIndex,
               splitOnLevel: 2,
+              traverseLength: this.config.filter().length - 1,
             });
             columnTracker.column = 0;
           });
@@ -615,7 +612,6 @@ mainRow    row	| i i i i |	| i i i i |
                     if (!child) return;
 
                     const node = await figma.getNodeByIdAsync(child.id);
-
                     if (node && node.type == "COMPONENT") {
                       // set component position
                       this.layoutComponent({
@@ -628,8 +624,8 @@ mainRow    row	| i i i i |	| i i i i |
                         maxSize,
                         layout,
                         previousLength: {
-                          width: c > 0 ? row[c - 1]?.length || 0 : 0,
-                          height: 0,
+                          width: row[c - 1]?.length || 0,
+                          height: mainRow[mr - 1]?.length || 0,
                         },
                       });
 
