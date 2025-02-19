@@ -17,6 +17,7 @@ interface IIndex {
 }
 
 interface IComponentLayout {
+  mainRow: number;
   row: number;
   column: number;
   index: number;
@@ -24,7 +25,7 @@ interface IComponentLayout {
   layout: string;
   node: ComponentNode;
   cache: ComponentCache;
-  previousLength: number;
+  previousLength: { width: number; height: number };
 }
 
 interface IColumnTracker {
@@ -74,8 +75,8 @@ export class VariantOrganiser {
     length = this.config.filter().length,
   }: {
     tree: T[];
-    onLast?: (group: T[], index: IIndex) => any;
-    onBeforeLast?: (tree: Object, index: IIndex) => any;
+    onLast?: (group: T[], index: IIndex, level: number) => any;
+    onBeforeLast?: (tree: Object, index: IIndex, level: number) => any;
     readonly level?: number;
     readonly index?: IIndex;
     length?: number;
@@ -83,13 +84,13 @@ export class VariantOrganiser {
     //check if last level
     if (level == length) {
       this.#groupCount++;
-      if (onLast) onLast(tree, index);
+      if (onLast) onLast(tree, index, level);
     } else {
       if (
         onBeforeLast &&
         ((length > 1 && level == length - 1) || length == 1)
       ) {
-        onBeforeLast(tree, index);
+        onBeforeLast(tree, index, level);
       }
       level++;
       Object.keys(tree).forEach((key, i) =>
@@ -257,22 +258,47 @@ export class VariantOrganiser {
     cache,
     maxSize,
     layout,
+    mainRow,
     row,
     column,
     index,
     previousLength,
   }: IComponentLayout) {
+    /*
+	Overall structure:
+	
+	i = index
+	
+ 	          column          column
+	         __________ 	 __________ 
+	   row	| i i i i |	| i i i i |
+mainRow    row	| i i i i |	| i i i i |
+           row	| i i i i |	| i i i i |
+                '---------'     '---------'
+	   
+	         __________ 	 __________ 
+	   row	| i i i i |	| i i i i |
+mainRow    row	| i i i i |	| i i i i |
+           row	| i i i i |	| i i i i |
+                '---------'     '---------'
+
+       */
+
     let x = cache.position.x;
     let y = cache.position.y;
-    const previousBlockWidth =
-      previousLength * (maxSize.width + this.margin) * column +
-      this.columnGap * column * Math.min(1, column);
+    const previousBlock = {
+      width:
+        previousLength.width * (maxSize.width + this.margin) * column +
+        this.columnGap * column * Math.min(1, column),
+      height: this.columnGap * mainRow * Math.min(1, mainRow),
+    };
 
     // layout components x and y based on configuration
-    y = row * (maxSize.height + this.margin);
+    y = row * (maxSize.height + this.margin) + previousBlock.height;
+
     switch (layout) {
       case "COLUMN":
-        x = index * (maxSize.width + this.margin) + previousBlockWidth;
+        x = index * (maxSize.width + this.margin) + previousBlock.width;
         break;
 
       case "ROW":
@@ -283,7 +309,7 @@ export class VariantOrganiser {
       case "CROSS_COL": //2 column properties + 1 row
       case "CROSS_ROW": //2 rows properties + 1 col
       case "CROSS": //2 col + 2 row properties
-        x = index * (maxSize.width + this.margin) + previousBlockWidth;
+        x = index * (maxSize.width + this.margin) + previousBlock.width;
 
         break;
     }
@@ -291,6 +317,16 @@ export class VariantOrganiser {
     // assign position
     node.x = this.margin + x;
     node.y = this.margin + y;
+
+    return;
+    console.log({
+      mainRow,
+      row,
+      column,
+      index,
+      y,
+      name: node.name,
+    });
   }
 
   translateColumns({
@@ -298,6 +334,7 @@ export class VariantOrganiser {
     destination,
     columnTracker,
     row,
+    splitOnLevel,
     columnIncrementType = "INCREMENT_PER_ITEM",
   }: {
     source: ComponentCache[];
@@ -305,6 +342,7 @@ export class VariantOrganiser {
     columnTracker: IColumnTracker;
     row?: number;
     columnIncrementType?: "INCREMENT_PER_ITEM" | "INCREMENT_PER_ROW";
+    splitOnLevel: number;
   }) {
     /*
 	                                       [
@@ -316,7 +354,8 @@ export class VariantOrganiser {
 
     this.traverse<ComponentCache>({
       tree: source,
-      onBeforeLast: (comps) => {
+      onBeforeLast: (comps, index, level) => {
+        console.log({ comps, index, level });
         // receive array as comps
         if (Array.isArray(comps)) {
           for (let r = 0; r < (comps as ComponentCache[]).length; r++) {
@@ -332,13 +371,11 @@ export class VariantOrganiser {
               component,
             ];
           }
-          if (columnIncrementType == "INCREMENT_PER_ITEM")
-            columnTracker.column++;
+
+          if (index.relative == splitOnLevel) columnTracker.column++;
         }
       },
     });
-
-    if (columnIncrementType == "INCREMENT_PER_ROW") columnTracker.column++;
   }
 
   async update(
@@ -458,6 +495,7 @@ export class VariantOrganiser {
             source: currentLevel,
             destination: groups[0],
             columnTracker,
+            splitOnLevel: 0,
           });
           break;
 
@@ -472,25 +510,29 @@ export class VariantOrganiser {
           break;
 
         case "CROSS_COL":
-          console.log(rowIndex + " ----------");
           this.translateColumns({
             source: currentLevel,
             destination: groups[0],
             columnTracker,
             row: rowIndex,
-            columnIncrementType: "INCREMENT_PER_ROW",
+            splitOnLevel: 2,
           });
-
           break;
 
         case "CROSS_ROW":
         case "CROSS":
-          this.translateColumns({
-            source: currentLevel,
-            destination: groups[rowIndex],
-            columnTracker,
-            row: rowIndex,
-            columnIncrementType: "INCREMENT_PER_ROW",
+          console.log(rowIndex + " ----------");
+          Object.keys(currentLevel).forEach((key, subRowIndex) => {
+            console.log(key, subRowIndex);
+            //get sub row index
+            this.translateColumns({
+              source: currentLevel,
+              destination: groups[rowIndex],
+              columnTracker,
+              row: subRowIndex,
+              splitOnLevel: 2,
+            });
+            columnTracker.column = 0;
           });
 
           break;
@@ -563,7 +605,7 @@ export class VariantOrganiser {
 
     //TODO: improve readability
     await Promise.all(
-      groups.map(async (mainRow) =>
+      groups.map(async (mainRow, mr) =>
         Promise.all(
           mainRow.map(async (row, r) => {
             return Promise.all(
@@ -576,8 +618,8 @@ export class VariantOrganiser {
 
                     if (node && node.type == "COMPONENT") {
                       // set component position
-                      console.log({ row: r, column: c, index: k });
                       this.layoutComponent({
+                        mainRow: mr,
                         row: r,
                         column: c,
                         index: k,
@@ -585,7 +627,10 @@ export class VariantOrganiser {
                         cache: child,
                         maxSize,
                         layout,
-                        previousLength: c > 0 ? row[c - 1]?.length || 0 : 0,
+                        previousLength: {
+                          width: c > 0 ? row[c - 1]?.length || 0 : 0,
+                          height: 0,
+                        },
                       });
 
                       //update component set bounds for later resize component
