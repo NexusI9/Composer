@@ -216,7 +216,6 @@ export class VariantOrganiser {
 	2. check highest column length
 	3. pad the smaller column by adding undefined value
     */
-    console.log("Align matrix");
 
     matrix.forEach((mainRow) => {
       if (!!!mainRow.length) return;
@@ -248,7 +247,6 @@ export class VariantOrganiser {
             u < maxColumnLength[col] - mainRow[row][col].length;
             u++
           ) {
-            console.log({ u });
             mainRow[row][col].push(undefined);
           }
 
@@ -408,7 +406,6 @@ mainRow    row	| i i i i |	| i i i i |
       */
 
     const tree = this.cache2Tree(!!layout.includes("CROSS"));
-    console.log(tree);
 
     /*
      ====== CONTEXT ======
@@ -542,7 +539,6 @@ mainRow    row	| i i i i |	| i i i i |
       columnTracker.column = 0;
     });
 
-    console.log("groups =>", groups);
 
     // cache bound box for later component set resizing
     let bounds: Rect = { x: 0, y: 0, width: 0, height: 0 };
