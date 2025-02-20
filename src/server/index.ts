@@ -49,7 +49,8 @@ figma.ui.onmessage = async (msg) => {
       activeComponentFromSelection(figma.currentPage.selection);
       break;
 
-    case "UPDATE_VARIANTS_CONFIGURATION":
+
+      case "UPDATE_VARIANTS_CONFIGURATION":
       if (activeComponent) {
         // store new values in global state
         store.update(payload);

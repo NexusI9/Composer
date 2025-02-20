@@ -334,8 +334,8 @@ mainRow    row	| i i i i |	| i i i i |
     }
 
     // assign position
-    node.x = this.columnGap + x;
-    node.y = this.rowGap + y;
+    node.x = GAP_COLUMN_DEFAULT + x;
+    node.y = GAP_ROW_DEFAULT + y;
   }
 
   translateColumns({
@@ -640,11 +640,11 @@ mainRow    row	| i i i i |	| i i i i |
                         ...bounds,
                         width: Math.max(
                           bounds.width,
-                          node.x + child.size.width + this.columnGap,
+                          node.x + child.size.width + GAP_COLUMN_DEFAULT,
                         ),
                         height: Math.max(
                           bounds.height,
-                          node.y + child.size.height + this.rowGap,
+                          node.y + child.size.height + GAP_ROW_DEFAULT,
                         ),
                       };
                     }
@@ -689,11 +689,11 @@ mainRow    row	| i i i i |	| i i i i |
           ...bounds,
           width: Math.max(
             bounds.width,
-            child.position.x + child.size.width + this.columnGap,
+            child.position.x + child.size.width + GAP_COLUMN_DEFAULT,
           ),
           height: Math.max(
             bounds.height,
-            child.position.y + child.size.height + this.rowGap,
+            child.position.y + child.size.height + GAP_ROW_DEFAULT,
           ),
         };
       }),
