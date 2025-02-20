@@ -1,11 +1,13 @@
-import { Table } from "./Table";
+import { GAP_COLUMN_DEFAULT, GAP_ROW_DEFAULT } from "@lib/constants";
 import { base64ArrayBuffer } from "./base64";
 import { ComponentCache } from "./ComponentCache";
 import { Configuration } from "./Configuration";
 
-interface IIndexKeyVal {
+interface IUpdateTableConfig {
   id: number;
   value: string;
+  columnGap: number;
+  rowGap: number;
 }
 export interface ITreeConfig {
   tree: object;
@@ -40,8 +42,12 @@ export class VariantOrganiser {
   current = {};
   activeComponent: Partial<ComponentSetNode> | undefined;
   #groupCount = 0;
-  margin: number = 20;
-  columnGap: number = 2 * this.margin;
+
+  columnGap: number = GAP_COLUMN_DEFAULT;
+  columnGroupGap: number = 2 * GAP_COLUMN_DEFAULT;
+
+  rowGap: number = GAP_ROW_DEFAULT;
+  rowGroupGap: number = 2 * GAP_ROW_DEFAULT;
 
   /**
    * Put the component in cache if doesn't exist (and generate preview)
@@ -299,37 +305,37 @@ mainRow    row	| i i i i |	| i i i i |
     let y = cache.position.y;
     const previousBlock = {
       width:
-        previousLength.width * (maxSize.width + this.margin) * column +
-        this.columnGap * (column * Math.min(1, column)),
+        previousLength.width * (maxSize.width + this.columnGap) * column +
+        this.columnGroupGap * (column * Math.min(1, column)),
       height:
-        previousLength.height * (maxSize.height + this.margin) * mainRow +
-        this.columnGap * (mainRow * Math.min(1, mainRow)),
+        previousLength.height * (maxSize.height + this.rowGap) * mainRow +
+        this.rowGroupGap * (mainRow * Math.min(1, mainRow)),
     };
 
     // layout components x and y based on configuration
-    y = row * (maxSize.height + this.margin) + previousBlock.height;
+    y = row * (maxSize.height + this.rowGap) + previousBlock.height;
 
     switch (layout) {
       case "COLUMN":
-        x = index * (maxSize.width + this.margin) + previousBlock.width;
+        x = index * (maxSize.width + this.columnGap) + previousBlock.width;
         break;
 
       case "ROW":
-        x = row * (maxSize.width + this.margin);
+        x = row * (maxSize.width + this.columnGap);
         break;
 
       case "CROSS_MONO": // 1 col + 1 row
       case "CROSS_COL": //2 column properties + 1 row
       case "CROSS_ROW": //2 rows properties + 1 col
       case "CROSS": //2 col + 2 row properties
-        x = index * (maxSize.width + this.margin) + previousBlock.width;
+        x = index * (maxSize.width + this.columnGap) + previousBlock.width;
 
         break;
     }
 
     // assign position
-    node.x = this.margin + x;
-    node.y = this.margin + y;
+    node.x = this.columnGap + x;
+    node.y = this.rowGap + y;
   }
 
   translateColumns({
@@ -381,13 +387,24 @@ mainRow    row	| i i i i |	| i i i i |
 
   async update(
     set: Partial<ComponentSetNode>,
-    { id, value }: IIndexKeyVal,
+    { id, value, columnGap, rowGap }: IUpdateTableConfig,
   ): Promise<ITreeConfig> {
     if (!set.id || !this.activeComponent?.id)
       return {
         config: [],
         tree: {},
       };
+
+    // Update gaps
+    if (this.columnGap !== columnGap) {
+      this.columnGap = columnGap;
+      this.columnGroupGap = 2 * this.columnGap;
+    }
+
+    if (this.rowGap !== rowGap) {
+      this.rowGap = rowGap;
+      this.rowGroupGap = 2 * this.rowGap;
+    }
 
     //Update configuration array
     this.config.allocate(id, value);
@@ -539,7 +556,6 @@ mainRow    row	| i i i i |	| i i i i |
       columnTracker.column = 0;
     });
 
-
     // cache bound box for later component set resizing
     let bounds: Rect = { x: 0, y: 0, width: 0, height: 0 };
 
@@ -624,11 +640,11 @@ mainRow    row	| i i i i |	| i i i i |
                         ...bounds,
                         width: Math.max(
                           bounds.width,
-                          node.x + child.size.width + this.margin,
+                          node.x + child.size.width + this.columnGap,
                         ),
                         height: Math.max(
                           bounds.height,
-                          node.y + child.size.height + this.margin,
+                          node.y + child.size.height + this.rowGap,
                         ),
                       };
                     }
@@ -673,11 +689,11 @@ mainRow    row	| i i i i |	| i i i i |
           ...bounds,
           width: Math.max(
             bounds.width,
-            child.position.x + child.size.width + this.margin,
+            child.position.x + child.size.width + this.columnGap,
           ),
           height: Math.max(
             bounds.height,
-            child.position.y + child.size.height + this.margin,
+            child.position.y + child.size.height + this.rowGap,
           ),
         };
       }),

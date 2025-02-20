@@ -1,6 +1,6 @@
 import { ILayerNameSettings, ISettings } from '@ctypes/settings';
 import { send } from "@client/lib/api";
-import { Button, Checkbox, ChevronDownIcon, DropdownMenu } from "@radix-ui/themes";
+import { Button, ChevronDownIcon, DropdownMenu } from "@radix-ui/themes";
 import InputDropdownItem from './InputDropdown.Item';
 
 
