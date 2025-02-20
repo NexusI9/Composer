@@ -1,0 +1,9 @@
+.input-container {
+  &[data-direction="HORIZONTAL"] {
+    flex-direction: row;
+  }
+
+  &[data-direction="VERTICAL"] {
+    flex-direction: column;
+  }
+}
