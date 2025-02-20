@@ -1,10 +1,8 @@
 import { IRequest, send } from "@client/lib/api";
 import Combobox from "@components/Combobox/Combobox";
 import ComboboxText from "@components/Combobox/Combobox.Text";
-import {
-  ISettingsConfigObject,
-  ISettingsInputConfigBase,
-} from "@ctypes/settings";
+import { FunctionComponent } from "react";
+import InputAmount from "../../../../../../../../.emacs.d/backup/!Users!elkhantour!Documents!Websites!FigmaPlugins!Composer!src!client!components!InputAmount!InputAmount.tsx~";
 
 interface IComboboxState {
   activeVariants: string[];
@@ -22,7 +20,7 @@ const handleOnComboboxChange = ({
   itemIndex: number;
   state: IComboboxState;
 }) => {
-  const APIValue: string | undefined = itemIndex == 0 ? undefined : value;
+  let APIValue = itemIndex == 0 ? undefined : value;
   const temp = state.activeVariants;
   temp[index] = value;
   state.setActiveVariants([...temp]);
@@ -33,22 +31,18 @@ const handleOnComboboxChange = ({
   });
 };
 
-export interface ISettingsCombobox extends ISettingsInputConfigBase {
-  paramIndex: number;
-  active: ComponentSetNode | undefined;
-  state: IComboboxState;
+export interface ISettingsInputConfig {
+  element: FunctionComponent;
+  props: Object;
 }
 
-export const comboboxConfig = ({
-  paramIndex,
-  active,
-  state,
-  label,
-  direction,
-}: ISettingsCombobox): ISettingsConfigObject => ({
-  element: Combobox,
-  label,
-  direction,
+export const comboboxConfig: ISettingsInputConfig = (
+  label: string,
+  paramIndex: number,
+  active: ComponentSetNode | undefined,
+  state: IComboboxState,
+) => ({
+  element: Combobox as FunctionComponent,
   props: {
     label,
     content: {
@@ -73,5 +67,20 @@ export const comboboxConfig = ({
         itemIndex: index,
         state,
       }),
+  },
+});
+
+export const inputAmountConfig: ISettingsInputConfig = (
+  label: string,
+  min: number,
+  max: number,
+  step: number,
+) => ({
+  element: InputAmount as FunctionComponent,
+  props: {
+    label,
+    min,
+    max,
+    step,
   },
 });

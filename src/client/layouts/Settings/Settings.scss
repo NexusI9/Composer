@@ -1,45 +1,46 @@
 .settings {
+  width: 100%;
+  height: 100%;
+  position: relative;
 
-    width: 100%;
-    height: 100%;
-    position: relative;
+  &:has(.settings-overlay[data-display="true"]) {
+    pointer-events: none;
+  }
 
-    &:has(.settings-overlay[data-display=true]) {
-        pointer-events: none;
+  &-overlay {
+    text-align: center;
+    user-select: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-color: #000000cc;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    &[data-display="true"] {
+      opacity: 1;
     }
+  }
 
-    &-overlay {
-        text-align: center;
-        user-select: none;
-        position: absolute;
-        top: 0;
-        left: 0;
-        pointer-events: none;
-        background-color: #000000CC;
-        opacity: 0;
-        transition: opacity 0.3s ease;
+  &-wrapper {
+    flex-shrink: 0;
+    flex-grow: 1;
+    width: fit-content;
+  }
 
-        &[data-display=true] {
-            opacity: 1;
-        }
+  &[data-active="false"] {
+    pointer-events: none;
+    flex: 0;
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .input-container {
+    flex-basis: 50%;
+    .rt-TextFieldRoot {
+      width: 100%;
     }
-
-    &-wrapper {
-        flex-shrink: 0;
-        flex-grow: 1;
-    }
-
-    &[data-active=false] {
-        pointer-events: none;
-        flex: 0;
-        width: 0;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    .combobox-trigger {
-        min-width: 100px;
-        flex-grow: 1;
-    }
-
+  }
 }

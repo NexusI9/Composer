@@ -1,19 +1,22 @@
+// imports
 import "./Settings.scss";
 import { send } from "@client/lib/api";
 import ComponentContext from "@components/ComponentContext/ComponentContext";
 import { Button, Text } from "@radix-ui/themes";
-import { createElement, FunctionComponent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { comboboxConfig } from "./Configs/Combobox";
 import { inputAmountConfig } from "./Configs/InputAmount";
+import { ISettingsConfigObject } from "@ctypes/settings";
+import SettingsOption from "@components/SettingsOption/SettingsOption";
+import { GAP_COLUMN_DEFAULT, GAP_ROW_DEFAULT } from "@lib/constants";
 
-interface IParamItem {
-  element: FunctionComponent<Object>;
-  props: Object;
-}
+// icons
+import GapVerticalIcon from "@icons/gap-v.svg";
+import GapHorizontalIcon from "@icons/gap-h.svg";
 
 interface IParam {
   heading: string;
-  options: Array<IParamItem>;
+  inputs: Array<ISettingsConfigObject>;
 }
 
 export default () => {
@@ -25,35 +28,73 @@ export default () => {
     setParameters([
       {
         heading: "Column",
-        options: [
-          comboboxConfig("Property 1", 0, active, {
-            activeVariants,
-            setActiveVariants,
+        inputs: [
+          comboboxConfig({
+            label: "Property 1",
+            paramIndex: 0,
+            active,
+            state: {
+              activeVariants,
+              setActiveVariants,
+            },
+            direction: "VERTICAL",
           }),
-          comboboxConfig("Property 2", 1, active, {
-            activeVariants,
-            setActiveVariants,
+          comboboxConfig({
+            label: "Property 2",
+            paramIndex: 1,
+            active,
+            state: {
+              activeVariants,
+              setActiveVariants,
+            },
+            direction: "VERTICAL",
           }),
         ],
       },
       {
         heading: "Row",
-        options: [
-          comboboxConfig("Property 1", 2, active, {
-            activeVariants,
-            setActiveVariants,
+        inputs: [
+          comboboxConfig({
+            label: "Property 1",
+            paramIndex: 2,
+            active,
+            state: {
+              activeVariants,
+              setActiveVariants,
+            },
+            direction: "VERTICAL",
           }),
-          comboboxConfig("Property 2", 3, active, {
-            activeVariants,
-            setActiveVariants,
+          comboboxConfig({
+            label: "Property 2",
+            paramIndex: 3,
+            active,
+            state: {
+              activeVariants,
+              setActiveVariants,
+            },
+            direction: "VERTICAL",
           }),
         ],
       },
       {
         heading: "Gap",
-        options: [
-          inputAmountConfig("Vertical", -1000, 1000, 1),
-          inputAmountConfig("Horizontal", -1000, 1000, 1),
+        inputs: [
+          inputAmountConfig({
+            direction: "VERTICAL",
+            icon: <GapVerticalIcon />,
+            defaultValue: GAP_COLUMN_DEFAULT,
+            gapType: "COLUMN",
+            min: -1000,
+            max: 1000,
+          }),
+          inputAmountConfig({
+            direction: "HORIZONTAL",
+            icon: <GapHorizontalIcon />,
+            defaultValue: GAP_ROW_DEFAULT,
+            gapType: "ROW",
+            min: -1000,
+            max: 1000,
+          }),
         ],
       },
     ]);
@@ -68,25 +109,24 @@ export default () => {
       <div className="settings padding-xl flex full-width">
         <div className="settings-wrapper full-height flex f-col gap-2xl f-center-h f-between">
           <div className="flex f-col gap-2xl full-width">
-            {parameters.map(({ heading, options }, i) => (
+            {parameters.map(({ heading, inputs }, i) => (
               <div className="flex f-col gap-m" key={`param${i}`}>
                 <Text size="1" weight="bold">
                   {heading}
                 </Text>
                 <div className="flex f-row gap-m">
-                  {options.map(({ element, props }, j) =>
-                    createElement(element, {
-                      ...props,
-                      key: `settingsoptions${i}${j}`,
-                    }),
-                  )}
+                  {inputs.map((props, j) => (
+                    <SettingsOption
+                      key={`settingsoptions${i}${j}`}
+                      {...props}
+                    />
+                  ))}
                 </div>
               </div>
             ))}
           </div>
 
           <div className="flex f-col gap-m full-width">
-            <Button>Confirm</Button>
             <Button
               color="crimson"
               onClick={() => send({ action: "RESET" })}
