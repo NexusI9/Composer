@@ -36,9 +36,9 @@ export function get(request: IRequest) {
 }
 
 
+export type CallbackFunction = (arg:IRequest) => any;
 
-
-export function listen(callback: (arg:IRequest) => any) {
+export function listen(callback: CallbackFunction) {
 
     interface ICallback {
         data: {

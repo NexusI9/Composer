@@ -8,6 +8,7 @@ import { Store } from "./lib/store";
 let activeComponent: undefined | Partial<ComponentSetNode>;
 let organiser = new VariantOrganiser();
 const store = new Store();
+let currentSelection: SceneNode[] = [];
 
 function activeComponentFromSelection(selection: readonly SceneNode[]) {
   activeComponent = validateActiveComponent(selection[0]);
@@ -49,8 +50,29 @@ figma.ui.onmessage = async (msg) => {
       activeComponentFromSelection(figma.currentPage.selection);
       break;
 
+    case "ADD_DARK_BACKGROUND":
+      const boundingBox = { x: 0, y: 0, width: 0, height: 0 };
 
-      case "UPDATE_VARIANTS_CONFIGURATION":
+      currentSelection.forEach((item) => {
+        const { absoluteBoundingBox } = item;
+        if (absoluteBoundingBox) {
+          boundingBox.x = Math.min(absoluteBoundingBox.x, boundingBox.x);
+          boundingBox.y = Math.min(absoluteBoundingBox.y, boundingBox.y);
+          boundingBox.width = Math.max(
+            absoluteBoundingBox.x + absoluteBoundingBox.width,
+            boundingBox.width,
+          );
+          boundingBox.height = Math.max(
+            absoluteBoundingBox.y + absoluteBoundingBox.height,
+            boundingBox.x,
+          );
+        }
+      });
+
+	  console.log(boundingBox);
+      break;
+
+    case "UPDATE_VARIANTS_CONFIGURATION":
       if (activeComponent) {
         // store new values in global state
         store.update(payload);
@@ -76,9 +98,12 @@ figma.ui.onmessage = async (msg) => {
 };
 
 figma.loadAllPagesAsync().then((_) => {
-  figma.on("selectionchange", () =>
-    activeComponentFromSelection(figma.currentPage.selection),
-  );
+  figma.on("selectionchange", () => {
+    activeComponentFromSelection(figma.currentPage.selection);
+
+    currentSelection = [...figma.currentPage.selection];
+  });
+
 
   figma.on("documentchange", ({ documentChanges }) => {
     //@ts-ignore
