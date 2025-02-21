@@ -97,6 +97,17 @@ export default () => {
         ],
       },
     ]);
+
+    //hide dropdown if not active
+    document
+      .querySelectorAll("*[data-radix-popper-content-wrapper]")
+      .forEach(
+        (dp) =>
+          ((dp as HTMLElement).style.visibility = active
+            ? "visible"
+            : "hidden"),
+      );
+      
   }, [activeVariants, active]);
 
   useEffect(() => {

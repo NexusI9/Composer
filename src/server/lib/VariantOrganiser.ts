@@ -317,11 +317,8 @@ mainRow    row	| i i i i |	| i i i i |
 
     switch (layout) {
       case "COLUMN":
-        x = index * (maxSize.width + this.columnGap) + previousBlock.width;
-        break;
-
       case "ROW":
-        x = row * (maxSize.width + this.columnGap);
+        x = index * (maxSize.width + this.columnGap) + previousBlock.width;
         break;
 
       case "CROSS_MONO": // 1 col + 1 row
