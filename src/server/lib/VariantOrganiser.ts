@@ -391,11 +391,13 @@ mainRow    row	| i i i i |	| i i i i |
 
     //Update configuration array
     this.config.allocate(id, value);
-    if (!this.config.filter().length)
+    if (!this.config.filter().length) {
+      this.reset();
       return {
         config: [],
         tree: {},
       };
+    }
 
     const { layout } = this.config;
 
@@ -683,5 +685,8 @@ mainRow    row	| i i i i |	| i i i i |
     );
 
     this.resizeFitComponent(bounds);
+
+    //reset layout
+    this.config.reset();
   }
 }

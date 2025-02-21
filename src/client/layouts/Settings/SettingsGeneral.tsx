@@ -1,16 +1,6 @@
-import Chip from "@components/Chip/Chip";
-import KeyboardListener, {
-  IKeyboardCallback,
-} from "@components/KeyboardListener/KeyboardListener";
+import { send } from "@client/lib/api";
+import { CallbackMethod } from "@ctypes/api";
 import { Text, Button } from "@radix-ui/themes";
-import { Fragment } from "react/jsx-runtime";
-import { send } from "@client/lib/api";
-
-interface IShortcut {
-  keys: string[];
-  description: string;
-}
-import { send } from "@client/lib/api";
 
 const generalCommands: {
   label: string;

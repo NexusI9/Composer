@@ -6,17 +6,31 @@ import { Tabs } from "@radix-ui/themes";
 import { createElement } from "react";
 
 const tabs = [
-  { name: "Organise", element: SettingsOrganise, value: "orgcomp" },
-  { name: "Other", element: SettingsGeneral, value: "genaction" },
+  {
+    name: "Organise",
+    element: SettingsOrganise,
+    value: "orgcomp",
+    onClick: void 0,
+  },
+  {
+    name: "Other",
+    element: SettingsGeneral,
+    value: "genaction",
+    onClick: void 0,
+  },
 ];
 
 export default () => {
   return (
-    <div className="settings flex f-col full-width">
+    <div className="settings">
       <Tabs.Root defaultValue={tabs[0].value}>
         <Tabs.List>
-          {tabs.map(({ name, value }) => (
-            <Tabs.Trigger key={`${name}trigger`} value={value}>
+          {tabs.map(({ name, value, onClick }) => (
+            <Tabs.Trigger
+              key={`${name}trigger`}
+              onClick={onClick}
+              value={value}
+            >
               {name}
             </Tabs.Trigger>
           ))}

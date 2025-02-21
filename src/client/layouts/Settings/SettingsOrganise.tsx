@@ -21,6 +21,7 @@ interface IParam {
 export default () => {
   const [active, setActive] = useState<ComponentSetNode>();
   const [activeVariants, setActiveVariants] = useState<string[]>([]);
+  const [activeID, setActiveID] = useState<string>();
   const [parameters, setParameters] = useState<IParam[]>([]);
 
   useEffect(() => {
@@ -99,6 +100,7 @@ export default () => {
     ]);
 
     //hide dropdown if not active
+
     document
       .querySelectorAll("*[data-radix-popper-content-wrapper]")
       .forEach(
@@ -107,6 +109,8 @@ export default () => {
             ? "visible"
             : "hidden"),
       );
+
+      if (active) setActiveID(active.id);
       
   }, [activeVariants, active]);
 
@@ -117,7 +121,7 @@ export default () => {
   return (
     <ComponentContext onChange={(e: any) => setActive(e)}>
       <div className="settings-organise padding-xl">
-        <div className="settings-wrapper full-width padding-bottom-m full-height flex f-col gap-3xl f-center-h f-between">
+        <div className="settings-wrapper full-width padding-bottom-m flex f-col gap-3xl f-center-h f-between">
           <div className="flex f-col gap-2xl full-width">
             {parameters.map(({ heading, inputs }, i) => (
               <div className="flex f-col gap-m" key={`param${i}`}>
@@ -127,7 +131,7 @@ export default () => {
                 <div className="flex f-row gap-m">
                   {inputs.map((props, j) => (
                     <SettingsOption
-                      key={`settingsoptions${i}${j}`}
+                      key={`settingsoptions${i}${j}${activeID}`}
                       {...props}
                     />
                   ))}

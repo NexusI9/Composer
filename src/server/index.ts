@@ -12,9 +12,9 @@ import { validateActiveComponent } from "./lib/utils";
 import { VariantOrganiser } from "./lib/VariantOrganiser";
 import { Store } from "./lib/store";
 
+const store = new Store();
 let activeComponent: undefined | Partial<ComponentSetNode>;
 let organiser = new VariantOrganiser();
-const store = new Store();
 let currentSelection: SceneNode[] = [];
 
 function activeComponentFromSelection(selection: readonly SceneNode[]) {
@@ -135,6 +135,7 @@ figma.ui.onmessage = async (msg) => {
       break;
 
     case "RESET":
+      store.reset();
       organiser.reset();
       break;
   }

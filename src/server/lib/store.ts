@@ -14,4 +14,11 @@ export class Store {
         this[key as keyof typeof this] = obj[key as keyof typeof this];
     });
   }
+
+  reset() {
+    this.value = "None";
+    this.index = 0;
+    this.columnGap = GAP_COLUMN_DEFAULT;
+    this.rowGap = GAP_ROW_DEFAULT;
+  }
 }
