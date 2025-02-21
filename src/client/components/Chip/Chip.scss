@@ -1,0 +1,8 @@
+.chip {
+  $colorName:sand;
+  border-radius: var(--radius-3);
+  border: solid 1px var(--#{$colorName}-6);
+  background: var(--#{$colorName}-2);
+  color: var(--#{$colorName}-12);
+  padding: var(--unit-s) var(--unit-m);
+}
