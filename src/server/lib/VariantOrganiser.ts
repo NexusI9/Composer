@@ -314,21 +314,7 @@ mainRow    row	| i i i i |	| i i i i |
 
     // layout components x and y based on configuration
     y = row * (maxSize.height + this.rowGap) + previousBlock.height;
-
-    switch (layout) {
-      case "COLUMN":
-      case "ROW":
-        x = index * (maxSize.width + this.columnGap) + previousBlock.width;
-        break;
-
-      case "CROSS_MONO": // 1 col + 1 row
-      case "CROSS_COL": //2 column properties + 1 row
-      case "CROSS_ROW": //2 rows properties + 1 col
-      case "CROSS": //2 col + 2 row properties
-        x = index * (maxSize.width + this.columnGap) + previousBlock.width;
-
-        break;
-    }
+    x = index * (maxSize.width + this.columnGap) + previousBlock.width;
 
     // assign position
     node.x = GAP_COLUMN_DEFAULT + x;
