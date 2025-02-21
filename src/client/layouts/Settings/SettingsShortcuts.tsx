@@ -12,9 +12,9 @@ const shortcutsMap: IShortcut[] = [
 ];
 
 export default () => (
-  <div className="settings-shortcuts padding-h-xl padding-top-m padding-bottom-xl flex f-col gap-xl">
+  <div className="settings-shortcuts padding-xl flex f-col gap-xl">
     <Text size="1" weight="bold">
-      Shortcuts
+      General Shortcuts
     </Text>
     <div className="settings-shortcuts-content">
       {shortcutsMap.map(({ keys, description }) => (
