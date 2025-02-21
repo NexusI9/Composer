@@ -4,7 +4,9 @@
   position: relative;
 
   &:has(.settings-overlay[data-display="true"]) {
-    pointer-events: none;
+    .settings-organise {
+      pointer-events: none;
+    }
   }
 
   &-overlay {

@@ -6,7 +6,7 @@ export default ({ show }: { show: boolean }) => (
     data-display={show}
   >
     <div className="settings-overlay-dialog padding-xl">
-      <Text size="1">Select a Component Set with variants to begin.</Text>
+      <Text size="2">Select a Component Set with variants to begin.</Text>
     </div>
   </div>
 );

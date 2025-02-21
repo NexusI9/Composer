@@ -1,6 +1,13 @@
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
-import { DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH } from "@lib/constants";
+import {
+  DARK_BACKGROUND_DEFAULT,
+  DARK_BACKGROUND_DIVIDER,
+  DEFAULT_WINDOW_HEIGHT,
+  DEFAULT_WINDOW_WIDTH,
+  GAP_COLUMN_DEFAULT,
+  GAP_ROW_DEFAULT,
+} from "@lib/constants";
 import { validateActiveComponent } from "./lib/utils";
 import { VariantOrganiser } from "./lib/VariantOrganiser";
 import { Store } from "./lib/store";
@@ -51,10 +58,17 @@ figma.ui.onmessage = async (msg) => {
       break;
 
     case "ADD_DARK_BACKGROUND":
-      const boundingBox = { x: 0, y: 0, width: 0, height: 0 };
+      // calculate bounding box
+      const boundingBox = {
+        x: Infinity,
+        y: Infinity,
+        width: -Infinity,
+        height: -Infinity,
+      };
 
       currentSelection.forEach((item) => {
         const { absoluteBoundingBox } = item;
+
         if (absoluteBoundingBox) {
           boundingBox.x = Math.min(absoluteBoundingBox.x, boundingBox.x);
           boundingBox.y = Math.min(absoluteBoundingBox.y, boundingBox.y);
@@ -64,12 +78,41 @@ figma.ui.onmessage = async (msg) => {
           );
           boundingBox.height = Math.max(
             absoluteBoundingBox.y + absoluteBoundingBox.height,
-            boundingBox.x,
+            boundingBox.height,
           );
         }
       });
 
-	  console.log(boundingBox);
+      boundingBox.width = Math.abs(
+        Math.abs(boundingBox.width) - Math.abs(boundingBox.x),
+      );
+      boundingBox.height = Math.abs(
+        Math.abs(boundingBox.height) - Math.abs(boundingBox.y),
+      );
+
+      // create background
+      const rect = figma.createRectangle();
+
+      rect.name = "composer-dark-background";
+      rect.cornerRadius = 3;
+
+      rect.x = Math.round(
+        boundingBox.x - GAP_COLUMN_DEFAULT / DARK_BACKGROUND_DIVIDER,
+      );
+      rect.y = Math.round(
+        boundingBox.y - GAP_ROW_DEFAULT / DARK_BACKGROUND_DIVIDER,
+      );
+      rect.resize(
+        Math.round(
+          boundingBox.width +
+            (2 * GAP_COLUMN_DEFAULT) / DARK_BACKGROUND_DIVIDER,
+        ),
+        Math.round(
+          boundingBox.height + (2 * GAP_ROW_DEFAULT) / DARK_BACKGROUND_DIVIDER,
+        ),
+      );
+      rect.fills = [{ type: "SOLID", color: DARK_BACKGROUND_DEFAULT }];
+      figma.currentPage.insertChild(0, rect);
       break;
 
     case "UPDATE_VARIANTS_CONFIGURATION":
@@ -103,7 +146,6 @@ figma.loadAllPagesAsync().then((_) => {
 
     currentSelection = [...figma.currentPage.selection];
   });
-
 
   figma.on("documentchange", ({ documentChanges }) => {
     //@ts-ignore

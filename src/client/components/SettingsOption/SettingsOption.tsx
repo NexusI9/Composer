@@ -5,13 +5,12 @@ import { createElement } from "react";
 export default ({
   direction,
   label,
-  icon,
   element,
   props,
 }: ISettingsConfigObject) => {
   return (
     <Input.Container direction={direction}>
-      {label || icon ? <Input.Label label={label} icon={icon} /> : false}
+      {label ? <Input.Label label={label} /> : false}
       {createElement(element, props)}
     </Input.Container>
   );

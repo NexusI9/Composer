@@ -1,17 +1,8 @@
+import { CallbackMethod } from "@ctypes/api";
 import { ReactNode, useEffect } from "react";
 
-interface ICallbackMethodAPI {
-  type: "API";
-  action: string;
-}
-
-interface ICallbackMethodFunction {
-  type: "FUNCTION";
-  action: Function;
-}
-
 export interface IKeyboardCallback {
-  action: ICallbackMethodAPI | ICallbackMethodFunction;
+  action: CallbackMethod;
   keys: string[];
 }
 
