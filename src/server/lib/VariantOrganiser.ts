@@ -1,4 +1,8 @@
-import { GAP_COLUMN_DEFAULT, GAP_ROW_DEFAULT } from "@lib/constants";
+import {
+  GAP_COLUMN_DEFAULT,
+  GAP_ROW_DEFAULT,
+  JUSTIFY_ALIGNMENT_DEFAULT,
+} from "@lib/constants";
 import { base64ArrayBuffer } from "./base64";
 import { ComponentCache } from "./ComponentCache";
 import { Configuration } from "./Configuration";
@@ -8,6 +12,7 @@ interface IUpdateTableConfig {
   value: string;
   columnGap: number;
   rowGap: number;
+  justify: JustifyAligment;
 }
 export interface ITreeConfig {
   tree: object;
@@ -28,11 +33,14 @@ interface IComponentLayout {
   node: ComponentNode;
   cache: ComponentCache;
   previousLength: { width: number; height: number };
+  justify: JustifyAligment;
 }
 
 interface IColumnTracker {
   column: number;
 }
+
+type JustifyAligment = "LEFT" | "CENTER" | "RIGHT";
 
 type TreeMatrix = (ComponentCache | undefined)[][][][];
 
@@ -275,6 +283,7 @@ export class VariantOrganiser {
     cache,
     maxSize,
     layout,
+    justify,
     mainRow,
     row,
     column,
@@ -316,9 +325,30 @@ mainRow    row	| i i i i |	| i i i i |
     y = row * (maxSize.height + this.rowGap) + previousBlock.height;
     x = index * (maxSize.width + this.columnGap) + previousBlock.width;
 
+    // set justify position
+    const { width, height } = node.absoluteBoundingBox || {
+      width: 0,
+      height: 0,
+    };
+
+    let justifyPosition = {
+      x:
+        justify == "CENTER"
+          ? (maxSize.width - width) / 2
+          : justify == "RIGHT"
+            ? maxSize.width - width
+            : 0,
+      y:
+        justify == "CENTER"
+          ? (maxSize.width - height) / 2
+          : justify == "RIGHT"
+            ? maxSize.width - height
+            : 0,
+    };
+
     // assign position
-    node.x = GAP_COLUMN_DEFAULT + x;
-    node.y = GAP_ROW_DEFAULT + y;
+    node.x = GAP_COLUMN_DEFAULT + justifyPosition.x + x;
+    node.y = GAP_ROW_DEFAULT + justifyPosition.y + y;
   }
 
   translateColumns({
@@ -370,7 +400,7 @@ mainRow    row	| i i i i |	| i i i i |
 
   async update(
     set: Partial<ComponentSetNode>,
-    { id, value, columnGap, rowGap }: IUpdateTableConfig,
+    { id, value, columnGap, rowGap, justify }: IUpdateTableConfig,
   ): Promise<ITreeConfig> {
     if (!set.id || !this.activeComponent?.id)
       return {
@@ -614,6 +644,7 @@ mainRow    row	| i i i i |	| i i i i |
                         cache: child,
                         maxSize,
                         layout,
+                        justify,
                         previousLength: {
                           width: row[c - 1]?.length || 0,
                           height: groups[mr - 1]?.length || 0,
