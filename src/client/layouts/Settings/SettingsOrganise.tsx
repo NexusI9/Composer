@@ -40,8 +40,9 @@ const gapInputsMap = [
 
 export default () => {
   const [active, setActive] = useState<ComponentSetNode>();
-  const [activeVariants, setActiveVariants] = useState<string[]>([]);
   const [activeID, setActiveID] = useState<string>();
+
+  const [activeVariants, setActiveVariants] = useState<string[]>([]);
   const [parameters, setParameters] = useState<IParam[]>([]);
 
   useEffect(() => {
@@ -114,7 +115,6 @@ export default () => {
     setActiveVariants([]);
   }, [active]);
 
-  console.log(activeVariants);
   return (
     <ComponentContext onChange={(e: any) => setActive(e)}>
       <div className="settings-organise settings-tab padding-xl">
@@ -160,7 +160,11 @@ export default () => {
           <div className="flex f-col gap-m full-width">
             <Button
               color="crimson"
-              onClick={() => send({ action: "RESET" })}
+              onClick={() => {
+                send({ action: "RESET" });
+                setParameters([]);
+                setActiveVariants([]);
+              }}
               variant="outline"
             >
               Reset

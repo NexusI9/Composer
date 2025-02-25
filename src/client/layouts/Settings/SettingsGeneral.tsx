@@ -10,7 +10,7 @@ const generalCommands: {
   {
     label: "Add dark background",
     callback: { type: "API", action: "ADD_DARK_BACKGROUND" },
-    description: "Add dark background behind selection",
+    description: "Add dark background behind current selection",
   },
 ];
 
