@@ -1,10 +1,16 @@
-import { GAP_COLUMN_DEFAULT, GAP_ROW_DEFAULT } from "@lib/constants";
+import {
+  GAP_COLUMN_DEFAULT,
+  GAP_ROW_DEFAULT,
+  JUSTIFY_ALIGNMENT_DEFAULT,
+} from "@lib/constants";
+import { JustifyAligment } from "./VariantOrganiser";
 
 export class Store {
   value: string = "None";
   index: number = 0;
   columnGap: number = GAP_COLUMN_DEFAULT;
   rowGap: number = GAP_ROW_DEFAULT;
+  justify: JustifyAligment = JUSTIFY_ALIGNMENT_DEFAULT;
 
   constructor() {}
 
@@ -20,5 +26,6 @@ export class Store {
     this.index = 0;
     this.columnGap = GAP_COLUMN_DEFAULT;
     this.rowGap = GAP_ROW_DEFAULT;
+    this.justify = JUSTIFY_ALIGNMENT_DEFAULT;
   }
 }

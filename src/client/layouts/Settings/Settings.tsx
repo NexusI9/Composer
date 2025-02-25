@@ -1,4 +1,4 @@
-// imports
+)// imports
 import "./Settings.scss";
 import SettingsOrganise from "./SettingsOrganise";
 import SettingsGeneral from "./SettingsGeneral";

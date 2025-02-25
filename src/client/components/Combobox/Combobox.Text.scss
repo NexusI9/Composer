@@ -1,6 +1,6 @@
 .combobox-text{
 
-    &[data-disabled=true]{
+    &[data-disabled]{
         pointer-events: none;
         opacity: 0.3;
     }

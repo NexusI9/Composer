@@ -1,10 +1,28 @@
-*.no-highlight{
-    &[data-highlighted]{
-        background-color: transparent;
-    }
+*.no-highlight {
+  &[data-highlighted] {
+    background-color: transparent;
+  }
 }
 
+body {
+  overflow: hidden;
+}
 
-.no-user-select{
-    user-select: none;
+.no-user-select {
+  user-select: none;
+}
+
+svg {
+  fill: var(--figma-color-icon);
+}
+
+*[data-disabled] {
+  &,
+  * {
+    pointer-events: none;
+  }
+  opacity: 0.5;
+  svg {
+    fill: var(--figma-color-icon-disabled);
+  }
 }

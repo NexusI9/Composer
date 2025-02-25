@@ -1,0 +1,13 @@
+      <svg width="60" height="60" viewBox="0 0 60 60" fill="currentColor">
+        <defs>
+          <pattern
+            id=":r28:"
+            width="20"
+            height="20"
+            patternUnits="userSpaceOnUse"
+          >
+            <circle cx="10" cy="10" r="1"></circle>
+          </pattern>
+        </defs>
+        <rect width="79" height="60" y="0" fill="url(#:r28:)"></rect>
+      </svg>
