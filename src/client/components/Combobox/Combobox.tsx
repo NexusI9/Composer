@@ -24,9 +24,10 @@ export interface IComboboxDefaultContent extends IComboboxContent {
 export interface ICombobox {
   content: IComboboxDefaultContent | IComboboxAsyncContent;
   onChange: (v: string, i: number) => any;
+  disabled?: boolean;
 }
 
-export default ({ content, onChange }: ICombobox) => {
+export default ({ content, onChange, disabled }: ICombobox) => {
   const [innerContent, setInnerContent] = useState<string[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
@@ -50,7 +51,12 @@ export default ({ content, onChange }: ICombobox) => {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <Button className="flex f-row f-between" variant="outline" color="gray">
+        <Button
+          className="flex f-row f-between"
+          variant="outline"
+          color="gray"
+          {...(!!disabled && { "data-disabled": "" })}
+        >
           {innerContent[activeIndex]} <ChevronDownIcon />
         </Button>
       </DropdownMenu.Trigger>
@@ -64,12 +70,7 @@ export default ({ content, onChange }: ICombobox) => {
               setActiveIndex(i);
             },
             key: value + i + performance.now(),
-            children: (
-              <>
-                {value}
-                {void console.log(value + i + performance.now())}
-              </>
-            ),
+            children: <>{value}</>,
           }),
         )}
       </DropdownMenu.Content>

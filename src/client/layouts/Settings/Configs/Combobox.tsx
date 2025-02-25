@@ -7,7 +7,7 @@ import {
 } from "@ctypes/settings";
 
 interface IComboboxState {
-  activeVariants: string[];
+  activeVariants: (string | undefined)[];
   setActiveVariants: Function;
 }
 
@@ -24,7 +24,8 @@ const handleOnComboboxChange = ({
 }) => {
   const APIValue: string | undefined = itemIndex == 0 ? undefined : value;
   const temp = state.activeVariants;
-  temp[index] = value;
+  temp[index] = itemIndex == 0 ? undefined : value;
+
   state.setActiveVariants([...temp]);
 
   send({
@@ -37,6 +38,7 @@ export interface ISettingsCombobox extends ISettingsInputConfigBase {
   paramIndex: number;
   active: ComponentSetNode | undefined;
   state: IComboboxState;
+  disabled?: boolean;
 }
 
 export const comboboxConfig = ({
@@ -45,12 +47,14 @@ export const comboboxConfig = ({
   state,
   label,
   direction,
+  disabled,
 }: ISettingsCombobox): ISettingsConfigObject => ({
   element: Combobox,
   label,
   direction,
   props: {
     label,
+    disabled,
     content: {
       key: active, //append a key so Combobox only reload when this key changes instead of the whole content
       type: "ASYNC",

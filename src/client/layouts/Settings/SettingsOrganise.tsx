@@ -65,6 +65,7 @@ export default () => {
               activeVariants,
               setActiveVariants,
             },
+            disabled: !!!activeVariants[0],
             direction: "VERTICAL",
           }),
         ],
@@ -88,6 +89,7 @@ export default () => {
               activeVariants,
               setActiveVariants,
             },
+            disabled: !!!activeVariants[2],
             direction: "VERTICAL",
           }),
         ],
@@ -112,6 +114,7 @@ export default () => {
     setActiveVariants([]);
   }, [active]);
 
+  console.log(activeVariants);
   return (
     <ComponentContext onChange={(e: any) => setActive(e)}>
       <div className="settings-organise settings-tab padding-xl">
@@ -138,11 +141,16 @@ export default () => {
               <Text size="1" weight="bold">
                 Alignment
               </Text>
-              <div className="settings-alignment">
+              <div
+                className="settings-alignment"
+                {...(!!!activeVariants.filter((n) => !!n).length && {
+                  "data-disabled": "",
+                })}
+              >
                 <div className="settings-gap flex f-col gap-m f-center-v">
                   {gapInputsMap.map((gapInput, i) => (
                     <SettingsOption key={`gapoptions${i}`} {...gapInput} />
-                    ))}
+                  ))}
                 </div>
                 {<SettingsOption {...alignMatrixConfig()} />}
               </div>
