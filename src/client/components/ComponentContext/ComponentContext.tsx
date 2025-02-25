@@ -11,7 +11,7 @@ export type ActiveComponent = ComponentSetNode | undefined;
 export default ({ onChange, children }: IComponentContext) => {
 
     useEffect(() => {
-        send({ action: 'GET_SELECTION' });
+        send({ action: 'GET_ACTIVE_COMPONENT' });
     }, []);
 
     listen(({ action, payload }) => {
