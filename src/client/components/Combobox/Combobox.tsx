@@ -32,6 +32,10 @@ export default ({ content, onChange, disabled }: ICombobox) => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
   useEffect(() => {
+    if (disabled) setActiveIndex(0);
+  }, [disabled]);
+    
+  useEffect(() => {
     switch (content.type) {
       case "ASYNC":
         setInnerContent([content.placeholder]);

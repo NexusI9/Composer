@@ -24,9 +24,20 @@ const handleOnComboboxChange = ({
 }) => {
   const APIValue: string | undefined = itemIndex == 0 ? undefined : value;
   const temp = state.activeVariants;
-  temp[index] = itemIndex == 0 ? undefined : value;
+  temp[index] = value;
 
-  state.setActiveVariants([...temp]);
+  // handle if None is selected
+  if (itemIndex == 0) {
+    temp[index] = undefined;
+    /*
+      handle if second combobox is filled but remove the first one
+      [ Value A ] [ Value B ] ===> [ None ] [ Value B ]
+    */
+    if (index == 0 && temp[1]) temp[1] = undefined;
+    if (index == 2 && temp[3]) temp[3] = undefined;
+  }
+
+    state.setActiveVariants([...temp]);
 
   send({
     action: "UPDATE_VARIANTS_CONFIGURATION",
@@ -56,7 +67,7 @@ export const comboboxConfig = ({
     label,
     disabled,
     content: {
-      key: active, //append a key so Combobox only reload when this key changes instead of the whole content
+	key: active, //append a key so Combobox only reload when this key changes instead of the whole content
       type: "ASYNC",
       placeholder: "None",
       action: "GET_ACTIVE_COMPONENT_VARIANTS_KEY",
