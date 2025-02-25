@@ -5,6 +5,11 @@
     flex-grow: 1;
   }
 
+  &-tab {
+    height: calc(100% - 40px);
+    overflow: scroll;
+  }
+
   &:has(.settings-overlay[data-display="true"]) {
     .settings-organise {
       pointer-events: none;

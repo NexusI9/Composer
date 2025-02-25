@@ -15,7 +15,7 @@ const generalCommands: {
 ];
 
 export default () => (
-  <div className="settings-shortcuts padding-xl flex f-col gap-xl">
+  <div className="settings-shortcuts settings-tab padding-xl flex f-col gap-xl">
     <Text size="1" weight="bold">
       Other Actions
     </Text>

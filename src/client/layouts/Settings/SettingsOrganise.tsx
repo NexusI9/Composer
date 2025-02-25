@@ -114,8 +114,8 @@ export default () => {
 
   return (
     <ComponentContext onChange={(e: any) => setActive(e)}>
-      <div className="settings-organise padding-xl">
-        <div className="settings-wrapper full-width padding-bottom-m flex f-col gap-3xl f-center-h f-between">
+      <div className="settings-organise settings-tab padding-xl">
+        <div className="settings-wrapper full-width full-height padding-bottom-m flex f-col gap-3xl f-center-h f-between">
           <div className="flex f-col gap-2xl full-width">
             {parameters.map(({ heading, inputs }, i) => (
               <div className="flex f-col gap-m" key={`param${i}`}>
