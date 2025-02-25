@@ -46,8 +46,12 @@ figma.ui.onmessage = async (msg) => {
         });
       break;
 
-    case "GET_SELECTION":
+    case "GET_ACTIVE_COMPONENT":
       activeComponentFromSelection(figma.currentPage.selection);
+      break;
+
+    case "GET_SELECTION":
+      figma.ui.postMessage({ ...msg, payload: currentSelection });
       break;
 
     case "ADD_DARK_BACKGROUND":
@@ -86,12 +90,19 @@ figma.ui.onmessage = async (msg) => {
 figma.loadAllPagesAsync().then((_) => {
   //get selection on start
   currentSelection = [...figma.currentPage.selection];
-    console.log({currentSelection});
+  figma.ui.postMessage({
+    action: "UPDATE_SELECTION",
+    payload: currentSelection,
+  });
 
   figma.on("selectionchange", () => {
     activeComponentFromSelection(figma.currentPage.selection);
 
     currentSelection = [...figma.currentPage.selection];
+    figma.ui.postMessage({
+      action: "UPDATE_SELECTION",
+      payload: currentSelection,
+    });
   });
 
   figma.on("documentchange", ({ documentChanges }) => {
