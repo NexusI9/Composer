@@ -38,6 +38,23 @@
     position: relative;
   }
 
+  &-alignment {
+    display: grid;
+    grid-template-columns: 3fr auto;
+    gap: var(--unit-m);
+
+    .align-matrix {
+      height: 100%;
+    }
+  }
+
+  &-gap {
+    justify-content: center;
+    .input-container {
+      flex-basis: auto;
+    }
+  }
+
   &-shortcuts {
     border-top: solid 1px var(--gray-7);
   }
@@ -45,6 +62,16 @@
   &-wrapper {
     flex-shrink: 0;
     flex-grow: 1;
+  }
+
+  &-input-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: var(--unit-m);
+
+    .input-container {
+      flex-basis: 50%;
+    }
   }
 
   &[data-active="false"] {
@@ -55,10 +82,7 @@
     padding-right: 0;
   }
 
-  .input-container {
-    flex-basis: 50%;
-    .rt-TextFieldRoot {
-      width: 100%;
-    }
+  .rt-TextFieldRoot {
+    width: 100%;
   }
 }
