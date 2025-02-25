@@ -45,6 +45,8 @@ export default () => {
   const [activeVariants, setActiveVariants] = useState<string[]>([]);
   const [parameters, setParameters] = useState<IParam[]>([]);
 
+  const [resetTrigger, setResetTrigger] = useState<number>(0);
+
   useEffect(() => {
     setParameters([
       {
@@ -143,6 +145,7 @@ export default () => {
               </Text>
               <div
                 className="settings-alignment"
+                key={`alignmatrix${resetTrigger}`}
                 {...(!!!activeVariants.filter((n) => !!n).length && {
                   "data-disabled": "",
                 })}
@@ -164,6 +167,7 @@ export default () => {
                 send({ action: "RESET" });
                 setParameters([]);
                 setActiveVariants([]);
+                setResetTrigger(performance.now());
               }}
               variant="outline"
             >
