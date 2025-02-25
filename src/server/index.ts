@@ -118,6 +118,7 @@ figma.ui.onmessage = async (msg) => {
     case "UPDATE_VARIANTS_CONFIGURATION":
       if (activeComponent) {
         // store new values in global state
+        //TODO: merge the store with organiser (Organiser.store)
         store.update(payload);
 
         // update figma layout
@@ -129,6 +130,7 @@ figma.ui.onmessage = async (msg) => {
             value: store.value,
             columnGap: store.columnGap,
             rowGap: store.rowGap,
+            justify: store.justify,
           }),
         });
       }

@@ -142,7 +142,7 @@ export default () => {
                 <div className="settings-gap flex f-col gap-m f-center-v">
                   {gapInputsMap.map((gapInput, i) => (
                     <SettingsOption key={`gapoptions${i}`} {...gapInput} />
-                  ))}
+                    ))}
                 </div>
                 {<SettingsOption {...alignMatrixConfig()} />}
               </div>

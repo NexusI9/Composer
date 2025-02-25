@@ -26,7 +26,7 @@ export interface ICombobox {
   onChange: (v: string, i: number) => any;
 }
 
-export default ({content, onChange }: ICombobox) => {
+export default ({ content, onChange }: ICombobox) => {
   const [innerContent, setInnerContent] = useState<string[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
@@ -64,7 +64,12 @@ export default ({content, onChange }: ICombobox) => {
               setActiveIndex(i);
             },
             key: value + i + performance.now(),
-            children: <>{value}</>,
+            children: (
+              <>
+                {value}
+                {void console.log(value + i + performance.now())}
+              </>
+            ),
           }),
         )}
       </DropdownMenu.Content>

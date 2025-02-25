@@ -40,7 +40,10 @@ interface IColumnTracker {
   column: number;
 }
 
-type JustifyAligment = "LEFT" | "CENTER" | "RIGHT";
+export type JustifyAligment = {
+  x: "LEFT" | "CENTER" | "RIGHT";
+  y: "TOP" | "CENTER" | "BOTTOM";
+};
 
 type TreeMatrix = (ComponentCache | undefined)[][][][];
 
@@ -331,18 +334,20 @@ mainRow    row	| i i i i |	| i i i i |
       height: 0,
     };
 
+    //TODO: find a more optimised way with "Matrix" maybe
+    // rn feels like includes may be a bit "overkill" for this task
     let justifyPosition = {
       x:
-        justify == "CENTER"
+        justify.x == "CENTER"
           ? (maxSize.width - width) / 2
-          : justify == "RIGHT"
+          : justify.x == "RIGHT"
             ? maxSize.width - width
             : 0,
       y:
-        justify == "CENTER"
-          ? (maxSize.width - height) / 2
-          : justify == "RIGHT"
-            ? maxSize.width - height
+        justify.y == "CENTER"
+          ? (maxSize.height - height) / 2
+          : justify.y == "BOTTOM"
+            ? maxSize.height - height
             : 0,
     };
 
