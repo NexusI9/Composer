@@ -1,0 +1,45 @@
+.align-matrix {
+  aspect-ratio: 1/1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  position: relative;
+  border: solid 1px var(--figma-color-border);
+  border-radius: var(--radius-3);
+  align-items: center;
+  justify-items: center;
+
+  & > svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    fill: var(--figma-color-icon-tertiary);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  &-cell {
+    width: 100%;
+    height: 100%;
+
+    svg {
+      opacity: 0;
+      width: 90%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      fill: var(--figma-color-icon-brand-pressed);
+    }
+
+    &:hover {
+      svg {
+        opacity: 1;
+      }
+    }
+
+    &[data-active="true"] {
+      svg {
+        opacity: 1;
+        fill: var(--figma-color-icon-brand);
+      }
+    }
+  }
+}
