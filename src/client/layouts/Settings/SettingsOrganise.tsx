@@ -53,6 +53,7 @@ export default () => {
         heading: "Column",
         inputs: [
           comboboxConfig({
+            value: "column1",
             paramIndex: 0,
             active,
             state: {
@@ -62,6 +63,7 @@ export default () => {
             direction: "VERTICAL",
           }),
           comboboxConfig({
+            value: "column2",
             paramIndex: 1,
             active,
             state: {
@@ -77,6 +79,7 @@ export default () => {
         heading: "Row",
         inputs: [
           comboboxConfig({
+            value: "row1",
             paramIndex: 2,
             active,
             state: {
@@ -86,6 +89,7 @@ export default () => {
             direction: "VERTICAL",
           }),
           comboboxConfig({
+            value: "row2",
             paramIndex: 3,
             active,
             state: {

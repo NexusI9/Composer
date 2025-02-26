@@ -2,7 +2,6 @@ import { get, IRequest } from "@client/lib/api";
 import { Button, ChevronDownIcon, DropdownMenu } from "@radix-ui/themes";
 import { createElement, FunctionComponent, useEffect, useState } from "react";
 import "./Combobox.scss";
-import { IInputBase } from "@ctypes/input";
 
 export interface IComboboxContent {
   element: FunctionComponent<Object>;
@@ -25,16 +24,18 @@ export interface ICombobox {
   content: IComboboxDefaultContent | IComboboxAsyncContent;
   onChange: (v: string, i: number) => any;
   disabled?: boolean;
+  value?: string;
 }
 
-export default ({ content, onChange, disabled }: ICombobox) => {
+export default ({ content, onChange, disabled, value }: ICombobox) => {
   const [innerContent, setInnerContent] = useState<string[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(0);
+  const comboboxValue = value;
 
   useEffect(() => {
     if (disabled) setActiveIndex(0);
   }, [disabled]);
-    
+
   useEffect(() => {
     switch (content.type) {
       case "ASYNC":
@@ -73,7 +74,7 @@ export default ({ content, onChange, disabled }: ICombobox) => {
               onChange(value, i);
               setActiveIndex(i);
             },
-            key: value + i + performance.now(),
+            key: value + i + comboboxValue,
             children: <>{value}</>,
           }),
         )}

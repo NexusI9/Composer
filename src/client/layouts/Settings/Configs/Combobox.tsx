@@ -37,7 +37,7 @@ const handleOnComboboxChange = ({
     if (index == 2 && temp[3]) temp[3] = undefined;
   }
 
-    state.setActiveVariants([...temp]);
+  state.setActiveVariants([...temp]);
 
   send({
     action: "UPDATE_VARIANTS_CONFIGURATION",
@@ -50,6 +50,7 @@ export interface ISettingsCombobox extends ISettingsInputConfigBase {
   active: ComponentSetNode | undefined;
   state: IComboboxState;
   disabled?: boolean;
+  value: string;
 }
 
 export const comboboxConfig = ({
@@ -59,6 +60,7 @@ export const comboboxConfig = ({
   label,
   direction,
   disabled,
+  value,
 }: ISettingsCombobox): ISettingsConfigObject => ({
   element: Combobox,
   label,
@@ -66,8 +68,9 @@ export const comboboxConfig = ({
   props: {
     label,
     disabled,
+    value,
     content: {
-	key: active, //append a key so Combobox only reload when this key changes instead of the whole content
+      key: active, //append a key so Combobox only reload when this key changes instead of the whole content
       type: "ASYNC",
       placeholder: "None",
       action: "GET_ACTIVE_COMPONENT_VARIANTS_KEY",
