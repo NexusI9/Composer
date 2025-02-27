@@ -1,7 +1,6 @@
 import { get, listen, send } from "@client/lib/api";
 import { CallbackMethod } from "@ctypes/api";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { Text, Button, Callout } from "@radix-ui/themes";
+import { Text, Button } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 
 interface IGeneralCommands {
@@ -18,7 +17,7 @@ export default () => {
       "dark-background": {
         label: "Add dark background",
         callback: { type: "API", action: "ADD_DARK_BACKGROUND" },
-        description: "Add dark background behind current selection",
+        description: "Add a dark background behind the current selection",
         disabled: !!!currentSelection.length,
       },
     },

@@ -27,7 +27,7 @@ export class ComponentCache {
 
     get nameObject() {
         const obj: { [key: string]: string } = {};
-        this.name.split(', ').forEach(item => {
+        this.name.split(/,\s*/g).forEach(item => {
             const split = item.split('=');
             if (split[0] && split[1]) obj[split[0] as keyof typeof obj] = split[1];
         });
